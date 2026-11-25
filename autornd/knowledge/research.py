@@ -38,8 +38,7 @@ from urllib.parse import urlsplit
 from dataclasses import dataclass, field
 
 from autornd.config import settings
-from autornd.knowledge.absence import (MIN_TERMS, Proof, name_terms, prove, provable_asks, render_proofs,
-                                        wrong_edition_pages)
+from autornd.knowledge.absence import Proof, name_terms, prove, render_proofs
 from autornd.knowledge.fetch import Source, fetch_source
 from autornd.knowledge.store import ingest_text, retrieve
 from autornd.routing.openrouter import BudgetExceeded, extract_json
@@ -817,51 +816,12 @@ async def _ask_documents(client, request: str, asked: list[str],
     if asks and read:
         searched = await name_terms(client, request, asks)
         proofs = prove(searched, read, request)
-        # The second look (owner's "do all three" of 2026-11-24): an ask whose words are on NO page read in
-        # full is where the page that holds the answer may simply not have been fetched (X35, 2026-11-24: the
-        # 2018 value was on a page the first search never named, the proof was true of the pages read, and the
-        # answer called the value not stated). One more search for that ask alone, on the pages not yet read.
-        # Not the second request removed on 2026-11-16, which fired on 13 of 144 lookups for any reason and
-        # gained nothing: this fires only on a proof that covers every page read, and a page that has the
-        # words ends the proof for it.
-        for number in _asks_on_no_page(searched, proofs, read, request)[:SECOND_LOOK_ASKS]:
-            quote = provable_asks(asks)[number]
-            named_again = await _name_documents(client, request, quote, max_tokens)
-            if named_again is None:
-                continue
-            seen = {d["url"] for d in documents}
-            fresh = {u: t for u, t in named_again[1].items() if u not in seen}
-            if not fresh:
-                continue
-            more_quotes, more_documents = await _read_documents(
-                fresh, _terms(request, quote, fresh), client, quote, read)
-            for document in more_documents:
-                document["request"] = 2
-            quotes += more_quotes
-            documents += more_documents
-            proofs = prove(searched, read, request)
     return Finding(
         question=question, citations=[d["url"] for d in documents],
         model=response.model, asked=[question], quotes=quotes,
         documents=documents, searched=searched, proofs=proofs,
         answer=("No summary was made. The passages below are the pages' own "
                 "words, fetched by the harness; read the answer from them."))
-
-
-# The asks given a second search: at most this many in one lookup, so the extra cost is bounded.
-SECOND_LOOK_ASKS = 2
-
-
-def _asks_on_no_page(searched: dict[int, list[str]], proofs: list[Proof],
-                     read: dict[str, Source], request: str = "") -> list[int]:
-    """The asks with enough words whose proof covers every page read in full: none of them has the words.
-    A page of another edition (no year the request names) is not a proof but is no page that has them
-    either, so it counts as covered: the page that holds the answer may not have been fetched."""
-    covered = dict(wrong_edition_pages(searched, read, request)) if request else {}
-    for proof in proofs:
-        covered[proof.ask] = covered.get(proof.ask, 0) + 1
-    return [n for n, words in sorted(searched.items())
-            if len(words) >= MIN_TERMS and read and covered.get(n, 0) == len(read)]
 
 
 def _terms(request: str, question: str, near: dict[str, str]) -> set[str]:

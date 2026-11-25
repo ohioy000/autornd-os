@@ -279,21 +279,6 @@ def edition_missing(request: str, words: list[str], text: str) -> set[str]:
     return named - set(_YEAR.findall(text)) if named else set()
 
 
-def wrong_edition_pages(terms: dict[int, list[str]], read: dict[str, Any], request: str) -> dict[int, int]:
-    """For each ask, how many pages read in full lack all its words but were not made a proof because
-    they carry no year the request names. The second look counts them: such a page is not the document."""
-    texts = {url: Searchable(page.text) for url, page in read.items()}
-    skipped: dict[int, int] = {}
-    for ask, words in terms.items():
-        if len(words) < MIN_TERMS:
-            continue
-        for url, page in read.items():
-            if len(page.text) >= MIN_PROOF_PAGE_CHARS and not any(texts[url].has(w) for w in words) \
-                    and edition_missing(request, words, page.text):
-                skipped[ask] = skipped.get(ask, 0) + 1
-    return skipped
-
-
 def prove(terms: dict[int, list[str]], read: dict[str, Any], request: str = "") -> list[Proof]:
     """The proofs: for each ask with at least MIN_TERMS words, each page read in full that has none.
 

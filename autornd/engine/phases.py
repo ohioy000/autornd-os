@@ -944,11 +944,7 @@ CONSIDERATIONS A REVIEWER RAISED (not requirements — weigh them; nothing is ju
             "\nThe grounding holds a proof of absence for ask "
             + ", ".join(str(n) for n in proven_asks)
             + ": the harness searched the full text of a page it read in full, and none of the "
-            "words a statement of the answer would be printed with is in it. Before you list an "
-            "ask in not_stated, check whether the grounding prints the parts of the figure the ask "
-            "wants (a product, a sum or a power of figures the pages do state): a figure the pages "
-            "give the parts of is computed from them, with the working in the summary, and is not "
-            "none stated. If the answer to "
+            "words a statement of the answer would be printed with is in it. If the answer to "
             "such an ask is that the page states none, list the ask in not_stated (its number, and "
             "why: the page and what was searched), say so in the summary naming the page, and "
             "give no figure for it. An ask with no proof of absence is never listed in "

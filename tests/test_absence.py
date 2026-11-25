@@ -19,7 +19,7 @@ import pytest
 from autornd.knowledge import absence
 from autornd.knowledge.absence import (
     MAX_TERM_CHARS, MAX_TERMS, MIN_TERMS, Proof, Searchable, TermsVerdict, clean_terms,
-    edition_missing, name_terms, prove, provable_asks, render_proofs, wrong_edition_pages,
+    edition_missing, name_terms, prove, provable_asks, render_proofs,
 )
 from autornd.routing.openrouter import BudgetExceeded
 
@@ -370,13 +370,6 @@ class TestAProofCountsOnlyOnAPageOfTheEditionTheQuestionNames:
     def test_a_year_inside_a_longer_number_is_not_a_year(self):
         assert edition_missing(self.REQUEST, self.TERMS, "see 12018 and 20180") == {"2018"}
         assert edition_missing(self.REQUEST, self.TERMS, "see (2018) and x2018x") == set()
-
-    def test_only_the_wrong_edition_pages_are_counted_for_the_second_look(self):
-        pages = {"a": page(self.P2022), "b": page(self.P2022 + " more words " * 3, url="b"),
-                 "c": page(self.P2018.replace("2018 adjustment", "2018 round"), url="c")}
-        assert wrong_edition_pages({1: self.TERMS}, pages, self.REQUEST) == {1: 2}
-        assert wrong_edition_pages({1: self.TERMS[:1]}, pages, self.REQUEST) == {}   # too few words
-        assert wrong_edition_pages({1: self.TERMS}, pages, "") == {}
 
 
 class TestTheSourceNamesNoModelAndNoPrice:

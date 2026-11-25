@@ -143,15 +143,6 @@ class TestTheLookupMakesTheProof:
         serve(monkeypatch, {DATASHEET_URL: DATASHEET})
         client = lookup_client([DATASHEET_URL])
         await research_gaps(client, "r", GAPS, asks=ASKS)
-        # The proof covers the only page read, so the second look searches once more for the ask; the
-        # words are still asked for once (2026-11-24, the second look).
-        assert client.order == ["search", "words", "search"]
-        assert client.order.count("words") == 1
-
-    async def test_a_page_that_prints_a_word_means_no_second_search(self, monkeypatch):
-        serve(monkeypatch, {DATASHEET_URL: DATASHEET + " junction-to-ambient 45"})
-        client = lookup_client([DATASHEET_URL])
-        await research_gaps(client, "r", GAPS, asks=ASKS)
         assert client.order == ["search", "words"]
 
     async def test_given_no_asks_the_lookup_is_what_it_was(self, monkeypatch):
@@ -446,15 +437,6 @@ class TestThePromptOffersTheChannelOnlyWhereThereIsAProofToOfferIt:
         assert "An ask with no proof of absence is never listed in not_stated" in prompt
         assert "- not_stated: list of the asks the page states none for" in prompt
 
-    async def test_with_a_proof_the_answer_is_told_to_compute_a_figure_the_pages_give_the_parts_of(self):
-        """X26 (2026-11-24): the 4 GiB maximum is 65,536 pages of 64 Ki, both printed, the product printed
-        nowhere, and the answer called it not stated. The sentence is before the not_stated instruction."""
-        prompt = await implement_prompt(proven=[1])
-        sentence = "a figure the pages give the parts of is computed from them, with the working in the summary"
-        assert sentence in prompt
-        assert prompt.index(sentence) < prompt.index("list the ask in not_stated")
-        assert sentence not in await implement_prompt()
-
     async def test_the_ruled_blocked_on_sentence_is_untouched_and_comes_first(self):
         prompt = await implement_prompt(proven=[1])
         sentence = prompt.index(BLOCKED_ON_SENTENCE)
@@ -674,102 +656,26 @@ class TestTheWholeGraphEndToEnd:
         assert state.status == "completed" and state.outputs["context"]["proven"] == []
 
 
-def two_search_client(first, second, asks_words=None):
-    """A client whose first search names `first` and whose later searches name `second`."""
-    client = SimpleNamespace()
-    calls = {"search": 0}
-
-    async def chat(**kwargs):
-        urls = first if calls["search"] == 0 else second
-        calls["search"] += 1
-        body = json.dumps({"documents": [{"url": u, "title": "t", "near": ""} for u in urls]})
-        return ModelResponse(content=body, model="search/model", prompt_tokens=1, completion_tokens=1,
-                             cost=0.0, citations=[])
-
-    async def chat_json(**kwargs):
-        words = asks_words or {1: WORDS}
-        return {"terms": [{"ask": n, "any_of": w} for n, w in words.items()]}, SimpleNamespace(cost=0.0)
-
-    client.chat = AsyncMock(side_effect=chat)
-    client.chat_json = AsyncMock(side_effect=chat_json)
-    client.calls = calls
-    return client
-
-
 @pytest.mark.asyncio
-class TestTheSecondLook:
-    """X35 (2026-11-24): the 2018 value was on a page the first search never named; the proof was true of
-    the pages read and the answer called the value not stated. An ask whose words are on no page read gets
-    one more search for that ask alone."""
+class TestTheLookupHandsTheRequestToTheProof:
+    """The edition check (owner's ruling of 2026-11-25) needs the user's request, which is where the year is named."""
 
-    OTHER = "https://example.org/the-page-the-first-search-missed.html"
+    WORDS_2018 = ["thermal resistance 2018", "junction-to-ambient 2018", "theta JA 2018"]
 
-    async def test_the_page_the_first_search_missed_is_read_and_ends_the_proof_for_it(self, monkeypatch):
-        serve(monkeypatch, {DATASHEET_URL: DATASHEET, self.OTHER: DATASHEET + " junction-to-ambient 45"})
-        client = two_search_client([DATASHEET_URL], [self.OTHER])
-        (finding,) = await research_gaps(client, "r", GAPS, asks=ASKS)
-        assert client.calls["search"] == 2
-        assert [d["url"] for d in finding.documents] == [DATASHEET_URL, self.OTHER]
-        assert [d["request"] for d in finding.documents] == [1, 2]
-        assert [p.url for p in finding.proofs] == [DATASHEET_URL]     # not the page that has the words
-        assert any("junction-to-ambient 45" in q.text for q in finding.quotes if q.url == self.OTHER)
-
-    async def test_a_page_that_has_the_words_beside_one_that_lacks_them_means_no_second_search(
-            self, monkeypatch):
-        """The trigger is a proof on EVERY page read. One page with the words is the answer found."""
-        serve(monkeypatch, {DATASHEET_URL: DATASHEET, self.OTHER: DATASHEET + " junction-to-ambient 45"})
-        client = two_search_client([DATASHEET_URL, self.OTHER], [])
-        await research_gaps(client, "r", GAPS, asks=ASKS)
-        assert client.calls["search"] == 1
-
-    EDITION_WORDS = {1: ["thermal resistance 2018", "junction-to-ambient 2018", "theta JA 2018"]}
-    EDITION_REQUEST = "Give the 2018 junction-to-ambient thermal resistance of the part"
-
-    async def test_a_page_of_another_edition_triggers_the_second_look_and_is_no_proof(self, monkeypatch):
-        """The edition check (owner's ruling of 2026-11-25): a page with no year the request names is not a
-        proof, and is no page that has the words either, so the second look runs, as it did on X35."""
-        serve(monkeypatch, {DATASHEET_URL: DATASHEET, self.OTHER: DATASHEET + " Edition of 2018."})
-        client = two_search_client([DATASHEET_URL], [self.OTHER], self.EDITION_WORDS)
-        (finding,) = await research_gaps(client, self.EDITION_REQUEST, GAPS, asks=ASKS)
-        assert client.calls["search"] == 2
-        assert [p.url for p in finding.proofs] == [self.OTHER]     # not the page of the other edition
-
-    async def test_when_the_second_look_finds_no_page_of_the_edition_there_is_no_proof_at_all(
-            self, monkeypatch):
+    async def test_a_page_with_no_year_the_request_names_is_not_a_proof(self, monkeypatch):
         serve(monkeypatch, {DATASHEET_URL: DATASHEET})
-        client = two_search_client([DATASHEET_URL], [], self.EDITION_WORDS)
-        (finding,) = await research_gaps(client, self.EDITION_REQUEST, GAPS, asks=ASKS)
-        assert client.calls["search"] == 2 and finding.proofs == []
+        client = lookup_client([DATASHEET_URL], words=self.WORDS_2018)
+        (finding,) = await research_gaps(client, "Give the 2018 thermal resistance", GAPS, asks=ASKS)
+        assert finding.proofs == []
 
-    async def test_a_second_page_that_also_lacks_the_words_is_a_second_proof(self, monkeypatch):
-        serve(monkeypatch, {DATASHEET_URL: DATASHEET, self.OTHER: DATASHEET})
-        client = two_search_client([DATASHEET_URL], [self.OTHER])
-        (finding,) = await research_gaps(client, "r", GAPS, asks=ASKS)
-        assert sorted(p.url for p in finding.proofs) == sorted([DATASHEET_URL, self.OTHER])
-
-    async def test_a_second_search_that_names_only_pages_already_read_fetches_nothing_more(self, monkeypatch):
+    async def test_the_same_page_is_a_proof_when_the_request_names_no_year(self, monkeypatch):
         serve(monkeypatch, {DATASHEET_URL: DATASHEET})
-        client = two_search_client([DATASHEET_URL], [DATASHEET_URL])
-        (finding,) = await research_gaps(client, "r", GAPS, asks=ASKS)
-        assert client.calls["search"] == 2 and [d["url"] for d in finding.documents] == [DATASHEET_URL]
+        client = lookup_client([DATASHEET_URL], words=self.WORDS_2018)
+        (finding,) = await research_gaps(client, "Give the thermal resistance", GAPS, asks=ASKS)
+        assert [p.url for p in finding.proofs] == [DATASHEET_URL]
 
-    async def test_at_most_two_asks_are_given_a_second_search(self, monkeypatch):
-        serve(monkeypatch, {DATASHEET_URL: DATASHEET})
-        asks = [{"number": n, "quote": f"ask {n}", "kind": "value"} for n in (1, 2, 3)]
-        client = two_search_client([DATASHEET_URL], [], asks_words={1: WORDS, 2: WORDS, 3: WORDS})
-        await research_gaps(client, "r", GAPS, asks=asks)
-        assert client.calls["search"] == 1 + 2
-
-    async def test_a_failed_second_search_leaves_the_lookup_whole(self, monkeypatch):
-        serve(monkeypatch, {DATASHEET_URL: DATASHEET})
-        client = two_search_client([DATASHEET_URL], [])
-        original = client.chat.side_effect
-
-        async def fails_second(**kwargs):
-            if client.calls["search"]:
-                raise RuntimeError("the provider refused")
-            return await original(**kwargs)
-
-        client.chat = AsyncMock(side_effect=fails_second)
-        (finding,) = await research_gaps(client, "r", GAPS, asks=ASKS)
-        assert [p.url for p in finding.proofs] == [DATASHEET_URL] and finding.quotes
+    async def test_a_page_that_carries_the_year_is_a_proof(self, monkeypatch):
+        serve(monkeypatch, {DATASHEET_URL: DATASHEET + " Edition of 2018."})
+        client = lookup_client([DATASHEET_URL], words=self.WORDS_2018)
+        (finding,) = await research_gaps(client, "Give the 2018 thermal resistance", GAPS, asks=ASKS)
+        assert [p.url for p in finding.proofs] == [DATASHEET_URL]
