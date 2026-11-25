@@ -1188,3 +1188,25 @@ class TestBooksDocumentsAndData:
                                   _docx())
         assert source.status == "failed"
         assert source.reason == "the document has no text"
+
+
+class TestAHostIsReachedOnIpv4First:
+    """The fetch connects to the first address. A dual-stack host that lists
+    IPv6 first hung every fetch on a machine with no IPv6 route (X38, 2026-11-25)."""
+
+    def _resolve(self, monkeypatch, infos):
+        class _Loop:
+            async def getaddrinfo(self, host, port, type=None):
+                return [(0, 0, 0, "", (a, 0)) for a in infos]
+        monkeypatch.setattr(fetch.asyncio, "get_running_loop", lambda: _Loop())
+
+    def test_ipv4_comes_first_when_the_host_lists_ipv6_first(self, monkeypatch):
+        monkeypatch.undo()
+        self._resolve(monkeypatch, ["2001:19e8:d4::29", "204.152.44.29"])
+        out = asyncio.run(fetch._addresses("example.test"))
+        assert out == ["204.152.44.29", "2001:19e8:d4::29"]
+
+    def test_an_ipv6_only_host_keeps_its_address(self, monkeypatch):
+        monkeypatch.undo()
+        self._resolve(monkeypatch, ["2001:db8::1"])
+        assert asyncio.run(fetch._addresses("example.test")) == ["2001:db8::1"]
