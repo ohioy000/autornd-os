@@ -672,10 +672,19 @@ async def _dspace_document(url: str, base: str) -> Source | None:
 
 
 async def _addresses(host: str) -> list[str]:
-    """Every address `host` resolves to."""
+    """Every address `host` resolves to, IPv4 first.
+
+    The fetch connects to the first address, so the order is the choice. Found
+    2026-11-25 on the X38 miss: mutcd-dr.fhwa.dot.gov resolves to an IPv6
+    address first, this machine has no IPv6 route, and every fetch of its
+    pages hung to the 60 s limit ("no answer within 60 s") while curl, which
+    falls back to IPv4, read the same pages in about 1 s. A longer limit would
+    not have helped. A host with only IPv6 still gets its IPv6 address.
+    """
     loop = asyncio.get_running_loop()
     infos = await loop.getaddrinfo(host, None, type=socket.SOCK_STREAM)
-    return [info[4][0] for info in infos]
+    found = [info[4][0] for info in infos]
+    return sorted(found, key=lambda a: ":" in a)
 
 
 async def _check_address(url: str) -> tuple[str, str, str]:

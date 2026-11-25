@@ -6,6 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+Fixed (2026-11-25, the owner's instruction "Longer time out", resolved at its root): a host is now reached on its IPv4 address first. The X38 miss was not slow reading: `mutcd-dr.fhwa.dot.gov` lists an IPv6 address first, this machine has no IPv6 route, and every fetch of its pages hung to the 60 s limit while curl read the same pages in about 1 s. Read live the same day, the two 2009 pages that timed out three times in a row now fetch in full (47,087 and 341,325 characters). The limit stays 60, since a longer wait would not have helped and the run budget allows no more. 2 new tests, the guarded line broken once.
+
 Changed (2026-11-25, the owner's instruction "Remove x41 from questionset"): the first hold-out set is version 1.1 with X41 removed. X41's key says the
 ATmega328P datasheet PDF states no thermal figure, which is true of the PDF (all 310,048 characters read), while Microchip's online documentation for the
 same part prints one, and three answers that quoted that real page were scored not right. The set as signed is kept byte for byte in
