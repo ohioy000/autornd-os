@@ -833,6 +833,105 @@ class TestAPageThatIsAFrameIsNotAPage:
         assert quote.status == "unfetched" and "shell" in quote.reason
 
 
+class TestADspaceFrameIsFollowedToItsFile:
+    """X3 (2026-11-25): iris.who.int answered the address of a PDF with a 755-byte DSpace frame, it was recorded as fetched with 33
+    characters, and the WHO air quality guidelines (a PDF of 7 MB behind the repository's API) were never read."""
+
+    HOST = "https://repo.example.org"
+    FRAME = ("<html><head><title>DSpace</title></head><body><ds-app></ds-app>"
+             "<script src='main.js' type='module'></script></body></html>")
+    TEXT = "SO2 24-hour interim targets 125 50 and the AQG level 40 micrograms per cubic metre. " * 4
+    ITEM = HOST + "/server/api/core/items/5b0ca7ab-830a-44b8-b99f-4ee743b4d7b2"
+
+    def _api(self, *, content="/server/api/core/bitstreams/b1/content", names=("guidelines.pdf",)):
+        j = lambda body: (200, {"content-type": "application/hal+json"}, json.dumps(body).encode())  # noqa: E731
+        streams = [{"name": n, "_links": {"content": {"href": self.HOST + content.replace("b1", f"b{i}")}}}
+                   for i, n in enumerate(names, 1)]
+        return {
+            self.HOST + "/server/api/pid/find?id=hdl:10665/345329": (302, {"location": self.ITEM}, b""),
+            self.ITEM: j({"_links": {"bundles": {"href": self.ITEM + "/bundles"}}}),
+            self.ITEM + "/bundles": j({"_embedded": {"bundles": [
+                {"name": "LICENSE", "_links": {"bitstreams": {"href": self.HOST + "/x"}}},
+                {"name": "ORIGINAL", "_links": {"bitstreams": {"href": self.HOST + "/server/api/core/bundles/o/bitstreams"}}}]}}),
+            self.HOST + "/server/api/core/bundles/o/bitstreams": j({"_embedded": {"bitstreams": streams}}),
+            self.HOST + "/server/api/core/bitstreams/b1/content": _pdf(self.TEXT),
+            self.HOST + "/server/api/core/bitstreams/b2/content": _pdf("The second file is another document. " * 8),
+        }
+
+    @pytest.mark.parametrize("address", [
+        "/bitstream/handle/10665/345329/guidelines.pdf",
+        "/bitstream/handle/10665/345329/guidelines.pdf?sequence=1&isAllowed=y",
+        "/handle/10665/345329",
+    ])
+    async def test_a_frame_at_a_documents_address_is_read_from_the_repository(self, monkeypatch, address):
+        pages = {self.HOST + address.split("?")[0]: _html(self.FRAME), **self._api()}
+        if "?" in address:
+            pages[self.HOST + address] = _html(self.FRAME)
+        monkeypatch.setattr(fetch, "_transport", _served(pages))
+        source = await fetch.fetch_source(self.HOST + address)
+        assert source.fetched and "AQG level 40" in source.text
+        assert source.url == self.HOST + address and source.final_url.endswith("/bitstreams/b1/content")
+
+    async def test_the_file_named_in_the_address_is_the_one_read(self, monkeypatch):
+        pages = {self.HOST + "/bitstream/handle/10665/345329/other.pdf": _html(self.FRAME),
+                 **self._api(names=("guidelines.pdf", "other.pdf"))}
+        monkeypatch.setattr(fetch, "_transport", _served(pages))
+        source = await fetch.fetch_source(self.HOST + "/bitstream/handle/10665/345329/other.pdf")
+        assert source.fetched and "second file" in source.text
+
+    async def test_an_item_address_reads_the_item_without_a_handle_lookup(self, monkeypatch):
+        seen: list[str] = []
+        address = self.HOST + "/items/5b0ca7ab-830a-44b8-b99f-4ee743b4d7b2"
+        monkeypatch.setattr(fetch, "_transport", _served({address: _html(self.FRAME), **self._api()}, seen))
+        assert (await fetch.fetch_source(address)).fetched
+        assert not any("pid/find" in u for u in seen)
+
+    async def test_a_hop_that_fails_leaves_the_frame_unread(self, monkeypatch):
+        api = self._api()
+        del api[self.ITEM + "/bundles"]
+        monkeypatch.setattr(fetch, "_transport",
+                            _served({self.HOST + "/handle/10665/345329": _html(self.FRAME), **api}))
+        source = await fetch.fetch_source(self.HOST + "/handle/10665/345329")
+        assert source.status == "failed" and "shell" in source.reason
+
+    async def test_a_file_on_another_host_is_not_followed(self, monkeypatch):
+        api = self._api(content="/server/api/core/bitstreams/b1/content")
+        api[self.HOST + "/server/api/core/bundles/o/bitstreams"] = (
+            200, {"content-type": "application/hal+json"},
+            json.dumps({"_embedded": {"bitstreams": [{"name": "g.pdf", "_links": {"content": {
+                "href": "https://elsewhere.example.net/g.pdf"}}}]}}).encode())
+        seen: list[str] = []
+        monkeypatch.setattr(fetch, "_transport",
+                            _served({self.HOST + "/handle/10665/345329": _html(self.FRAME), **api}, seen))
+        assert (await fetch.fetch_source(self.HOST + "/handle/10665/345329")).status == "failed"
+        assert not any("elsewhere" in u for u in seen)
+
+    async def test_a_frame_that_is_not_dspace_is_not_sent_to_a_repository_api(self, monkeypatch):
+        seen: list[str] = []
+        angular = self.FRAME.replace("<ds-app></ds-app>", "<app-root></app-root>")
+        monkeypatch.setattr(fetch, "_transport",
+                            _served({self.HOST + "/handle/10665/345329": _html(angular)}, seen))
+        source = await fetch.fetch_source(self.HOST + "/handle/10665/345329")
+        assert source.status == "failed" and seen == [self.HOST + "/handle/10665/345329"]
+
+    async def test_a_tiny_page_that_loads_a_script_is_a_frame_whatever_its_root_is_called(self, monkeypatch):
+        tiny = "<html><body><my-viewer></my-viewer><script src='a.js'></script></body></html>"
+        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html(tiny)}))
+        assert (await fetch.fetch_source(PAGE)).status == "failed"
+
+    async def test_a_short_page_that_is_mostly_its_own_words_is_a_page_though_it_loads_a_script(self, monkeypatch):
+        short = "<html><body><p>Charge each cell to 3.65 V, no higher.</p><script>1</script></body></html>"
+        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html(short)}))
+        assert (await fetch.fetch_source(PAGE)).fetched
+
+    async def test_a_tiny_page_with_no_script_and_a_long_page_with_one_are_pages(self, monkeypatch):
+        plain = "<html><body><p>Charge to 3.65 V.</p></body></html>"
+        long = "<html><body><p>" + "The limit is stated here. " * 20 + "</p><script src='a.js'></script></body></html>"
+        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html(plain), PAGE + "2": _html(long)}))
+        assert (await fetch.fetch_source(PAGE)).fetched
+        assert (await fetch.fetch_source(PAGE + "2")).fetched
+
+
 class TestTheSourcesAreReturned:
     async def test_a_lookup_record_names_each_page_and_what_was_found(self, monkeypatch):
         monkeypatch.setattr(fetch, "_transport",
