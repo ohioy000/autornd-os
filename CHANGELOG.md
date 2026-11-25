@@ -6,6 +6,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+Changed (2026-11-25, the owner's instruction "Remove x41 from questionset"): the first hold-out set is version 1.1 with X41 removed. X41's key says the
+ATmega328P datasheet PDF states no thermal figure, which is true of the PDF (all 310,048 characters read), while Microchip's online documentation for the
+same part prints one, and three answers that quoted that real page were scored not right. The set as signed is kept byte for byte in
+`evals/professional/holdout-questions-v1.json` so earlier readings reproduce. 7 new tests, each guarded line broken once. No code changes. The record
+is `docs/reviews/2026-11-25-x41-removed-from-the-first-holdout.md`.
+
 Added (2026-11-23, the owner's instruction to plan and implement a fix for the warning flaw; on a branch, for the owner's ruling):
 the delivery says what the answer itself leaves open, read off its typed fields and never off its prose. An ask of kind value or
 verdict with no typed result and no claim that the document states none, a `blocked_on` note the run completed on, an ask the
