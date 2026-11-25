@@ -3,7 +3,7 @@
 > **This file is an archive.** Its narrative is the snapshot of 2026-10-21 and later sections were added as work went on. For where things stand now, read [`docs/HANDOVER-ONE-PAGE.md`](docs/HANDOVER-ONE-PAGE.md), [`docs/release-notes.md`](docs/release-notes.md) and [`docs/MODELS.md`](docs/MODELS.md). The test count in line 4 is kept true by a guard; the rest is history.
 
 **Repo:** `github.com/ohioy000/autornd-os` (public), the shared repository every agent works through; its `main` is the truth.
-**Tests:** 2680 · **Date of this snapshot:** 2026-10-21, counts re-derived against the tree under test
+**Tests:** 2690 · **Date of this snapshot:** 2026-10-21, counts re-derived against the tree under test
 
 > **Ruling D27 (2026-09-25):** the sha stamp is deleted — a fact about the tree you are on is verifiable there; a relationship to main is not, before you merge. The test count remains because it is a property of the tree under test. If a reader needs the sha, git answers that question and cannot be stale because it is the answer rather than a copy of it.
 
@@ -330,7 +330,7 @@ evals/
   grounding/*.yaml       ★  8 sectors graded against published figures
 
 profiles/*.yaml             ten tracked profiles (§5)
-tests/                      111 files, 2680 tests
+tests/                      111 files, 2690 tests
 
 ```
 
@@ -742,7 +742,7 @@ D31 below. If any credential is later shown exposed, this disposition
 is revoked and the warning re-opens with a date.
 ```
 
-### 3.7 Test distribution (2680 total)
+### 3.7 Test distribution (2690 total)
 
 
 | file | n | file | n |
@@ -836,7 +836,7 @@ surface, and the tiers nobody has measured. §5.
 
 ### 4.2 Known bugs, blockers and failing tests
 
-**No failing unit tests — 2680/2680 pass.** Everything below is a live-behaviour
+**No failing unit tests — 2690/2690 pass.** Everything below is a live-behaviour
 
 or design issue. **Closed items stay in the table with their resolution**: the
 ledger is most of this section's value, and three of the entries below were

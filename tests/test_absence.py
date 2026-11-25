@@ -19,7 +19,7 @@ import pytest
 from autornd.knowledge import absence
 from autornd.knowledge.absence import (
     MAX_TERM_CHARS, MAX_TERMS, MIN_TERMS, Proof, Searchable, TermsVerdict, clean_terms,
-    name_terms, prove, provable_asks, render_proofs,
+    edition_missing, name_terms, prove, provable_asks, render_proofs, wrong_edition_pages,
 )
 from autornd.routing.openrouter import BudgetExceeded
 
@@ -329,6 +329,54 @@ class TestNamingTheWords:
         client, _ = double(error=BudgetExceeded("over the ceiling"))
         with pytest.raises(BudgetExceeded):
             await name_terms(client, "r", ASKS)
+
+
+class TestAProofCountsOnlyOnAPageOfTheEditionTheQuestionNames:
+    """X35 (2026-11-24): the question asked for the CODATA 2018 value, every page the proof was made on was the
+    2022 adjustment, the words of the 2018 value were truly absent from them, and the answer said the value was
+    not stated. A page that carries no year the request names is not shown to be the edition asked about."""
+
+    REQUEST = "What is the CODATA 2022 value of the Rydberg constant, and the 2018 value it replaced?"
+    TERMS = ["CODATA 2018 value", "10 973 731.568 160", "2018 adjustment"]
+    P2022 = ("CODATA 2022 recommended values. Rydberg constant 10 973 731.568 157(12) per metre. "
+             "Fine-structure constant, electron mass, proton mass and the Planck constant follow in the table. "
+             "Source: the 2022 adjustment of the fundamental physical constants, published May 2024.")
+    P2018 = P2022 + " Superseded: the 2018 adjustment gave a value near it, listed in the earlier edition."
+
+    def test_a_page_of_another_edition_proves_nothing(self):
+        assert prove({1: self.TERMS}, {"a": page(self.P2022)}, self.REQUEST) == []
+
+    def test_a_page_that_carries_the_year_is_a_proof_as_before(self):
+        text = self.P2018.replace("2018 adjustment", "2018 round")
+        assert [p.url for p in prove({1: self.TERMS}, {"a": page(text)}, self.REQUEST)] == ["a"]
+
+    def test_without_the_request_every_page_counts_as_before(self):
+        assert len(prove({1: self.TERMS}, {"a": page(self.P2022)})) == 1
+
+    def test_a_year_the_request_does_not_name_is_a_guess_not_an_identifier(self):
+        """Search words may list guessed answers ("2025 to 2043"); a page lacking a guess is just absence."""
+        terms = ["new epoch", "2025 to 2043", "fifth epoch"]
+        assert len(prove({1: terms}, {"a": page(self.P2022)}, "What is the new tidal epoch?")) == 1
+
+    def test_an_ask_whose_words_name_no_year_is_unaffected(self):
+        terms = ["thermal resistance", "junction-to-ambient", "°C/W"]
+        assert len(prove({1: terms}, {"a": page(DATASHEET)}, "In the 2020 datasheet, what is theta JA?")) == 1
+
+    def test_the_edition_is_read_off_the_page_text_not_its_address(self):
+        text = self.P2022
+        assert edition_missing(self.REQUEST, self.TERMS, text) == {"2018"}
+        assert edition_missing(self.REQUEST, self.TERMS, text + " 2018") == set()
+
+    def test_a_year_inside_a_longer_number_is_not_a_year(self):
+        assert edition_missing(self.REQUEST, self.TERMS, "see 12018 and 20180") == {"2018"}
+        assert edition_missing(self.REQUEST, self.TERMS, "see (2018) and x2018x") == set()
+
+    def test_only_the_wrong_edition_pages_are_counted_for_the_second_look(self):
+        pages = {"a": page(self.P2022), "b": page(self.P2022 + " more words " * 3, url="b"),
+                 "c": page(self.P2018.replace("2018 adjustment", "2018 round"), url="c")}
+        assert wrong_edition_pages({1: self.TERMS}, pages, self.REQUEST) == {1: 2}
+        assert wrong_edition_pages({1: self.TERMS[:1]}, pages, self.REQUEST) == {}   # too few words
+        assert wrong_edition_pages({1: self.TERMS}, pages, "") == {}
 
 
 class TestTheSourceNamesNoModelAndNoPrice:

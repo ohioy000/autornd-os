@@ -28,6 +28,7 @@ in the middle of "resis-tance", ligatures).
 from __future__ import annotations
 
 import logging
+import re
 import unicodedata
 from dataclasses import dataclass
 from typing import Any
@@ -262,11 +263,44 @@ class Proof:
                 "pages": self.pages, "fetched_at": self.fetched_at, "sha256": self.sha256}
 
 
-def prove(terms: dict[int, list[str]], read: dict[str, Any]) -> list[Proof]:
+# A year the request names. The owner's ruling of 2026-11-25 (the edition check): X35 asked for the CODATA 2018
+# value and every page its proofs were made on was the 2022 adjustment, so the words of the 2018 value were
+# truly absent from them and the answer said the value was not stated. A page that does not carry a year
+# the question names is not shown to be the edition the question is about, so it proves nothing. Read over
+# 453 stored proofs on 302 pages (2026-11-25, docs/proposals/2026-11-25-edition-check.md): 12 of 419 scored
+# proofs dropped (10 X35, 2 X38), none of the 102 on questions whose key says none. A year in the search
+# words that the request does not name is a guessed answer ("2025 to 2043"), not an identifier: not counted.
+_YEAR = re.compile(r"(?<!\d)(19[5-9]\d|20[0-4]\d)(?!\d)")
+
+
+def edition_missing(request: str, words: list[str], text: str) -> set[str]:
+    """The years the request names and the ask's search words repeat that are on no part of `text`."""
+    named = set(_YEAR.findall(request)) & set(_YEAR.findall(" ".join(words)))
+    return named - set(_YEAR.findall(text)) if named else set()
+
+
+def wrong_edition_pages(terms: dict[int, list[str]], read: dict[str, Any], request: str) -> dict[int, int]:
+    """For each ask, how many pages read in full lack all its words but were not made a proof because
+    they carry no year the request names. The second look counts them: such a page is not the document."""
+    texts = {url: Searchable(page.text) for url, page in read.items()}
+    skipped: dict[int, int] = {}
+    for ask, words in terms.items():
+        if len(words) < MIN_TERMS:
+            continue
+        for url, page in read.items():
+            if len(page.text) >= MIN_PROOF_PAGE_CHARS and not any(texts[url].has(w) for w in words) \
+                    and edition_missing(request, words, page.text):
+                skipped[ask] = skipped.get(ask, 0) + 1
+    return skipped
+
+
+def prove(terms: dict[int, list[str]], read: dict[str, Any], request: str = "") -> list[Proof]:
     """The proofs: for each ask with at least MIN_TERMS words, each page read in full that has none.
 
     `read` is the pages read in full, by address (a `Source` that was fetched); a page that was not read
     in full is not in it and so proves nothing. Free and deterministic: no model reads a page here.
+    `request` is the user's request: a page that carries no year the request names and the ask's words
+    repeat is of another edition and proves nothing (the edition check, above). Without it every page counts.
     """
     proofs: list[Proof] = []
     texts = {url: Searchable(page.text) for url, page in read.items()}
@@ -278,6 +312,8 @@ def prove(terms: dict[int, list[str]], read: dict[str, Any]) -> list[Proof]:
             if len(page.text) < MIN_PROOF_PAGE_CHARS:
                 continue
             if any(texts[url].has(word) for word in words):
+                continue
+            if edition_missing(request, words, page.text):
                 continue
             proofs.append(Proof(
                 ask=ask, terms=tuple(words), url=url, chars=len(page.text),

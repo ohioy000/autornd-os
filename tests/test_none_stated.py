@@ -722,6 +722,25 @@ class TestTheSecondLook:
         await research_gaps(client, "r", GAPS, asks=ASKS)
         assert client.calls["search"] == 1
 
+    EDITION_WORDS = {1: ["thermal resistance 2018", "junction-to-ambient 2018", "theta JA 2018"]}
+    EDITION_REQUEST = "Give the 2018 junction-to-ambient thermal resistance of the part"
+
+    async def test_a_page_of_another_edition_triggers_the_second_look_and_is_no_proof(self, monkeypatch):
+        """The edition check (owner's ruling of 2026-11-25): a page with no year the request names is not a
+        proof, and is no page that has the words either, so the second look runs, as it did on X35."""
+        serve(monkeypatch, {DATASHEET_URL: DATASHEET, self.OTHER: DATASHEET + " Edition of 2018."})
+        client = two_search_client([DATASHEET_URL], [self.OTHER], self.EDITION_WORDS)
+        (finding,) = await research_gaps(client, self.EDITION_REQUEST, GAPS, asks=ASKS)
+        assert client.calls["search"] == 2
+        assert [p.url for p in finding.proofs] == [self.OTHER]     # not the page of the other edition
+
+    async def test_when_the_second_look_finds_no_page_of_the_edition_there_is_no_proof_at_all(
+            self, monkeypatch):
+        serve(monkeypatch, {DATASHEET_URL: DATASHEET})
+        client = two_search_client([DATASHEET_URL], [], self.EDITION_WORDS)
+        (finding,) = await research_gaps(client, self.EDITION_REQUEST, GAPS, asks=ASKS)
+        assert client.calls["search"] == 2 and finding.proofs == []
+
     async def test_a_second_page_that_also_lacks_the_words_is_a_second_proof(self, monkeypatch):
         serve(monkeypatch, {DATASHEET_URL: DATASHEET, self.OTHER: DATASHEET})
         client = two_search_client([DATASHEET_URL], [self.OTHER])
