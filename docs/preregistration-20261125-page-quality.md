@@ -36,18 +36,19 @@ document's `final_url` and page count), and the cost from the run's accounting.
 
 ## Baseline (stored records, harness before the change)
 
-* **X31:** across the first hold-out, the retry check and the second-look run, the draws held two right answers for every blocked one; its
-  proofs sat on 1,770 to 2,081 character frames of the same site.
+* **X31:** first hold-out asked again: right, blocked by the harness's own rule, right; second-look run: wrong in both delivered draws, on
+  proofs made on a 1,770-character frame of the same site (read from the stored records).
 * **H9:** `rerunv2c`: refused ("Ask 1 is not answered by the grounding") with a "not stated" caution; `resume1`: right; `H`: blocked by
   the key limit. That is 1 right, 1 wrong refusal on the frame, 1 undelivered.
-* **X3:** right in 2 of 3, wrong once (no figure). **X35:** right in 2 of 3, wrong once (the 2018 value refused). **X19, X36, X41:** right in
+* **X3:** first hold-out asked again right in 2 of 3, wrong once (no figure); second-look run right in 3 of 3. **X35:** the same, wrong once
+  in the first (the 2018 value refused), right in 3 of 3 in the second. **X19, X36, X41:** right in
   every delivered draw except X41 once partly (did not commit that the datasheet states none).
 
 ## Predictions (written before any answer is read)
 
 * **Targets:** 6 of 6 right. Both routes fire in every draw that opens the cited page (the documents record shows the API address and a
   page count above 0 for legislation, a JSON page for NVD). No "not stated" caution cites a frame.
-* **Not expected to change:** at most 1 not-right of 6, the same kind as before (X3 refused, X35's second year refused).
+* **Not expected to change:** at most 1 not-right of 6, the same kind as before (X3 with no figure, X35 with the 2018 value refused).
 * **Controls:** at most 1 not-right of 9, X41's known limit being the likely one.
 * **Cost:** '$0.014' to '$0.020' an answer; the PDF of an instrument adds reading time, not much cost.
 
