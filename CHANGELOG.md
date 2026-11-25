@@ -8,11 +8,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/).
 
 Fixed (2026-11-25, the owner's instruction "Longer time out", resolved at its root): a host is now reached on its IPv4 address first. The X38 miss was not slow reading: `mutcd-dr.fhwa.dot.gov` lists an IPv6 address first, this machine has no IPv6 route, and every fetch of its pages hung to the 60 s limit while curl read the same pages in about 1 s. Read live the same day, the two 2009 pages that timed out three times in a row now fetch in full (47,087 and 341,325 characters). The limit stays 60, since a longer wait would not have helped and the run budget allows no more. 2 new tests, the guarded line broken once.
 
-Changed (2026-11-25, the owner's instruction "Remove x41 from questionset"): the first hold-out set is version 1.1 with X41 removed. X41's key says the
-ATmega328P datasheet PDF states no thermal figure, which is true of the PDF (all 310,048 characters read), while Microchip's online documentation for the
-same part prints one, and three answers that quoted that real page were scored not right. The set as signed is kept byte for byte in
-`evals/professional/holdout-questions-v1.json` so earlier readings reproduce. 7 new tests, each guarded line broken once. No code changes. The record
-is `docs/reviews/2026-11-25-x41-removed-from-the-first-holdout.md`.
+Corrected (2026-11-25): the removal of X41 from the first hold-out (#343) is undone, and the set is again the 42 questions as signed. The removal rested on my claim that a real page for the same part gives a thermal figure. Read again the same day, that page is the AVR DA family's (AVR128DA28 and its kin, Table 37-9, 60 degC/W for the 28-pin PDIP), not the ATmega328P's, so the three answers that quoted it took a figure from another family, the very trap the key's commonly_confused field names, and the key, which says the datasheet states none, was right. No code changes; the guard test of the removal is deleted with it.
 
 Added (2026-11-23, the owner's instruction to plan and implement a fix for the warning flaw; on a branch, for the owner's ruling):
 the delivery says what the answer itself leaves open, read off its typed fields and never off its prose. An ask of kind value or
