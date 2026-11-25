@@ -1,0 +1,245 @@
+{
+ "c88efcdb": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/sl-runs/FX-1/shard-0.jsonl#0",
+  "question": "X3",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "e5609cf3": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/sl-runs/FX-1/shard-0.jsonl#1",
+  "question": "X18",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "67dd625c": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/sl-runs/FX-1/shard-0.jsonl#2",
+  "question": "X26",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "12419784": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/sl-runs/FX-1/shard-0.jsonl#3",
+  "question": "X31",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "blocked",
+  "delivered": false,
+  "error": "Implementation blocked on an ask it cannot satisfy: implementation names an ask it cannot satisfy: ask 3: Table 8 item 7 of the in-force instrument (F2025L01047"
+ },
+ "a71364d9": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/sl-runs/FX-1/shard-0.jsonl#4",
+  "question": "X35",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "1531d237": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/sl-runs/FX-1/shard-0.jsonl#5",
+  "question": "X3",
+  "invocation": "FX-1",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "70044420": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/sl-runs/FX-1/shard-0.jsonl#6",
+  "question": "X18",
+  "invocation": "FX-1",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "6369291d": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/sl-runs/FX-1/shard-0.jsonl#7",
+  "question": "X26",
+  "invocation": "FX-1",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "08d9fed8": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/sl-runs/FX-1/shard-0.jsonl#8",
+  "question": "X31",
+  "invocation": "FX-1",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "8cae8532": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/sl-runs/FX-1/shard-0.jsonl#9",
+  "question": "X35",
+  "invocation": "FX-1",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "0aac8ab4": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/sl-runs/FX-1/shard-0.jsonl#10",
+  "question": "X3",
+  "invocation": "FX-1",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "39894e9e": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/sl-runs/FX-1/shard-0.jsonl#11",
+  "question": "X18",
+  "invocation": "FX-1",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "9ca461f3": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/sl-runs/FX-1/shard-0.jsonl#12",
+  "question": "X26",
+  "invocation": "FX-1",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "78b486d8": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/sl-runs/FX-1/shard-0.jsonl#13",
+  "question": "X31",
+  "invocation": "FX-1",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "3603497d": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/sl-runs/FX-1/shard-0.jsonl#14",
+  "question": "X35",
+  "invocation": "FX-1",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "c0296739": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/sl-runs/FX-2/shard-0.jsonl#0",
+  "question": "X19",
+  "invocation": "FX-2",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "c6606b10": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/sl-runs/FX-2/shard-0.jsonl#1",
+  "question": "X36",
+  "invocation": "FX-2",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "f61d255a": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/sl-runs/FX-2/shard-0.jsonl#2",
+  "question": "X40",
+  "invocation": "FX-2",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "be0e21e1": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/sl-runs/FX-2/shard-0.jsonl#3",
+  "question": "X41",
+  "invocation": "FX-2",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "bac601a5": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/sl-runs/FX-2/shard-0.jsonl#4",
+  "question": "X19",
+  "invocation": "FX-2",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "66c2b0d0": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/sl-runs/FX-2/shard-0.jsonl#5",
+  "question": "X36",
+  "invocation": "FX-2",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "ba493825": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/sl-runs/FX-2/shard-0.jsonl#6",
+  "question": "X40",
+  "invocation": "FX-2",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "e07a778f": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/sl-runs/FX-2/shard-0.jsonl#7",
+  "question": "X41",
+  "invocation": "FX-2",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "8f6dad7f": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/sl-runs/FX-2/shard-0.jsonl#8",
+  "question": "X19",
+  "invocation": "FX-2",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "18c8fb5e": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/sl-runs/FX-2/shard-0.jsonl#9",
+  "question": "X36",
+  "invocation": "FX-2",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "1ecc04ff": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/sl-runs/FX-2/shard-0.jsonl#10",
+  "question": "X40",
+  "invocation": "FX-2",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "e7bff278": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/sl-runs/FX-2/shard-0.jsonl#11",
+  "question": "X41",
+  "invocation": "FX-2",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ }
+}

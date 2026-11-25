@@ -1,0 +1,350 @@
+{
+ "1d43e12f": {
+  "verdict": "wrong",
+  "group": "not-right"
+ },
+ "7edcffe6": {
+  "verdict": "partly",
+  "group": "not-right"
+ },
+ "9aea5edf": {
+  "verdict": "partly",
+  "group": "not-right"
+ },
+ "af6310da": {
+  "verdict": "partly",
+  "group": "not-right"
+ },
+ "fe2b4a15": {
+  "verdict": "wrong",
+  "group": "not-right"
+ },
+ "a5e7f0cc": {
+  "verdict": "wrong",
+  "group": "not-right"
+ },
+ "3108c5c5": {
+  "verdict": "wrong",
+  "group": "not-right"
+ },
+ "a29af400": {
+  "verdict": "wrong",
+  "group": "not-right"
+ },
+ "44022ec5": {
+  "verdict": "partly",
+  "group": "not-right"
+ },
+ "3c0bf4fd": {
+  "verdict": "wrong",
+  "group": "not-right"
+ },
+ "f84a406d": {
+  "verdict": "right",
+  "group": "not-right",
+  "borderline": true,
+  "note": "gives 99,5 % over one year and 1-in-200 (years) with the right arithmetic; wrongly says the Directive does not state a ruin frequency (recital 64 does); blind reader: wrong"
+ },
+ "1b4c893c": {
+  "verdict": "wrong",
+  "group": "not-right"
+ },
+ "db166195": {
+  "verdict": "wrong",
+  "group": "not-right"
+ },
+ "cbb9ed16": {
+  "verdict": "wrong",
+  "group": "not-right"
+ },
+ "e1f7d933": {
+  "verdict": "partly",
+  "group": "not-right"
+ },
+ "ce206f39": {
+  "verdict": "wrong",
+  "group": "not-right"
+ },
+ "9e61104a": {
+  "verdict": "wrong",
+  "group": "not-right"
+ },
+ "ee6ae85b": {
+  "verdict": "wrong",
+  "group": "not-right"
+ },
+ "3ab7797a": {
+  "verdict": "wrong",
+  "group": "not-right",
+  "borderline": true,
+  "note": "gives Superseded, never Withdrawn 14 May 2024; kept not right"
+ },
+ "fa8b350b": {
+  "verdict": "wrong",
+  "group": "not-right"
+ },
+ "59fe8c03": {
+  "verdict": "wrong",
+  "group": "not-right"
+ },
+ "0a02025f": {
+  "verdict": "wrong",
+  "group": "not-right"
+ },
+ "b9d23956": {
+  "verdict": "right",
+  "group": "screen-flag (all false flags)"
+ },
+ "383b604f": {
+  "verdict": "right",
+  "group": "screen-flag (all false flags)"
+ },
+ "7c264cf7": {
+  "verdict": "right",
+  "group": "screen-flag (all false flags)"
+ },
+ "36e0f99e": {
+  "verdict": "right",
+  "group": "screen-flag (all false flags)"
+ },
+ "ae1e2a89": {
+  "verdict": "right",
+  "group": "screen-flag (all false flags)"
+ },
+ "f6f03d64": {
+  "verdict": "right",
+  "group": "screen-flag (all false flags)"
+ },
+ "26997241": {
+  "verdict": "right",
+  "group": "screen-flag (all false flags)"
+ },
+ "109d5e49": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "ab8fb97b": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "ad665adc": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "3c1ea3f0": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "e1c079d4": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "93b6e00e": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "a327b0ed": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "4200313c": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "21fbc06a": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "ee147445": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "ea2354af": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "25fa2683": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "f1d7c243": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "f9d34c8c": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "8a82ad5d": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "27cc3bb0": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "109497d1": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "8dc28eec": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "18f0703e": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "2ac73e6b": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "5f3a8006": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "26394413": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "9453a12e": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "1770941f": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "42676cb8": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "5a42c6c9": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "4f307fbc": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "866a5841": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "b4aaacf1": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "44f32cab": {
+  "verdict": "right",
+  "group": "seeded sample"
+ },
+ "dfaa788b": {
+  "verdict": "right",
+  "group": "stage 2: every one read against its key by value (9 not right read in full; 18 right by stated value, reference design and screen)"
+ },
+ "19a1fb0a": {
+  "verdict": "wrong",
+  "group": "stage 2: every one read against its key by value (9 not right read in full; 18 right by stated value, reference design and screen)"
+ },
+ "2367d7e1": {
+  "verdict": "right",
+  "group": "stage 2: every one read against its key by value (9 not right read in full; 18 right by stated value, reference design and screen)"
+ },
+ "5c4b09fe": {
+  "verdict": "right",
+  "group": "stage 2: every one read against its key by value (9 not right read in full; 18 right by stated value, reference design and screen)"
+ },
+ "ed848bfb": {
+  "verdict": "right",
+  "group": "stage 2: every one read against its key by value (9 not right read in full; 18 right by stated value, reference design and screen)"
+ },
+ "bb5409a8": {
+  "verdict": "wrong",
+  "group": "stage 2: every one read against its key by value (9 not right read in full; 18 right by stated value, reference design and screen)"
+ },
+ "3605394e": {
+  "verdict": "right",
+  "group": "stage 2: every one read against its key by value (9 not right read in full; 18 right by stated value, reference design and screen)"
+ },
+ "fa004e85": {
+  "verdict": "right",
+  "group": "stage 2: every one read against its key by value (9 not right read in full; 18 right by stated value, reference design and screen)"
+ },
+ "27e28c21": {
+  "verdict": "right",
+  "group": "stage 2: every one read against its key by value (9 not right read in full; 18 right by stated value, reference design and screen)"
+ },
+ "1860f3ca": {
+  "verdict": "partly",
+  "group": "stage 2: every one read against its key by value (9 not right read in full; 18 right by stated value, reference design and screen)"
+ },
+ "e348918f": {
+  "verdict": "wrong",
+  "group": "stage 2: every one read against its key by value (9 not right read in full; 18 right by stated value, reference design and screen)"
+ },
+ "a7a644f0": {
+  "verdict": "right",
+  "group": "stage 2: every one read against its key by value (9 not right read in full; 18 right by stated value, reference design and screen)"
+ },
+ "ecaca810": {
+  "verdict": "wrong",
+  "group": "stage 2: every one read against its key by value (9 not right read in full; 18 right by stated value, reference design and screen)"
+ },
+ "5872e388": {
+  "verdict": "right",
+  "group": "stage 2: every one read against its key by value (9 not right read in full; 18 right by stated value, reference design and screen)"
+ },
+ "0976ba93": {
+  "verdict": "wrong",
+  "group": "stage 2: every one read against its key by value (9 not right read in full; 18 right by stated value, reference design and screen)"
+ },
+ "e3a797b1": {
+  "verdict": "right",
+  "group": "stage 2: every one read against its key by value (9 not right read in full; 18 right by stated value, reference design and screen)"
+ },
+ "bfb627c3": {
+  "verdict": "right",
+  "group": "stage 2: every one read against its key by value (9 not right read in full; 18 right by stated value, reference design and screen)"
+ },
+ "db45dd85": {
+  "verdict": "right",
+  "group": "stage 2: every one read against its key by value (9 not right read in full; 18 right by stated value, reference design and screen)"
+ },
+ "f8f52464": {
+  "verdict": "right",
+  "group": "stage 2: every one read against its key by value (9 not right read in full; 18 right by stated value, reference design and screen)"
+ },
+ "93ac992e": {
+  "verdict": "right",
+  "group": "stage 2: every one read against its key by value (9 not right read in full; 18 right by stated value, reference design and screen)"
+ },
+ "d2ba87d4": {
+  "verdict": "right",
+  "group": "stage 2: every one read against its key by value (9 not right read in full; 18 right by stated value, reference design and screen)"
+ },
+ "b2c5e83a": {
+  "verdict": "right",
+  "group": "stage 2: every one read against its key by value (9 not right read in full; 18 right by stated value, reference design and screen)"
+ },
+ "4d38a226": {
+  "verdict": "partly",
+  "group": "stage 2: every one read against its key by value (9 not right read in full; 18 right by stated value, reference design and screen)"
+ },
+ "41684110": {
+  "verdict": "right",
+  "group": "stage 2: every one read against its key by value (9 not right read in full; 18 right by stated value, reference design and screen)"
+ },
+ "f3ea95b3": {
+  "verdict": "partly",
+  "group": "stage 2: every one read against its key by value (9 not right read in full; 18 right by stated value, reference design and screen)"
+ },
+ "fe07518c": {
+  "verdict": "wrong",
+  "group": "stage 2: every one read against its key by value (9 not right read in full; 18 right by stated value, reference design and screen)"
+ },
+ "54a07b96": {
+  "verdict": "right",
+  "group": "stage 2: every one read against its key by value (9 not right read in full; 18 right by stated value, reference design and screen)"
+ }
+}

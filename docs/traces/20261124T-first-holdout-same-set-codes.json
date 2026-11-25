@@ -1,0 +1,1136 @@
+{
+ "f7ace090": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#0",
+  "question": "X1",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "c80913e6": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#1",
+  "question": "X2",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "a1da2755": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#2",
+  "question": "X3",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "a861a8ed": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#3",
+  "question": "X4",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "74524bf4": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#4",
+  "question": "X5",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "accd2bf2": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#5",
+  "question": "X6",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "3075f595": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#6",
+  "question": "X7",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "fb3b3b02": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#7",
+  "question": "X8",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "ef2a5f87": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#8",
+  "question": "X9",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "95ca26b4": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#9",
+  "question": "X10",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "afa03b3d": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#10",
+  "question": "X11",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "83a4ad7a": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#11",
+  "question": "X12",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "07909223": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#12",
+  "question": "X13",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "c3a7b88a": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#13",
+  "question": "X14",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "370635ae": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#14",
+  "question": "X15",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "5c7b40c9": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#15",
+  "question": "X16",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "194e0e69": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#16",
+  "question": "X17",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "edabf3b6": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#17",
+  "question": "X18",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "b4355644": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#18",
+  "question": "X19",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "a744c431": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#19",
+  "question": "X20",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "43a970a5": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#20",
+  "question": "X21",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "a96a6a80": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#21",
+  "question": "X1",
+  "invocation": "FX-1",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "e4794121": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#22",
+  "question": "X2",
+  "invocation": "FX-1",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "e1cfcc0a": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#23",
+  "question": "X3",
+  "invocation": "FX-1",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "5d20ae7b": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#24",
+  "question": "X4",
+  "invocation": "FX-1",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "e3d1dcfd": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#25",
+  "question": "X5",
+  "invocation": "FX-1",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "29414d06": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#26",
+  "question": "X6",
+  "invocation": "FX-1",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "d1847b92": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#27",
+  "question": "X7",
+  "invocation": "FX-1",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "04139ec8": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#28",
+  "question": "X8",
+  "invocation": "FX-1",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "16ae6a01": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#29",
+  "question": "X9",
+  "invocation": "FX-1",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "8d3fb55c": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#30",
+  "question": "X10",
+  "invocation": "FX-1",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "9e1181d8": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#31",
+  "question": "X11",
+  "invocation": "FX-1",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "d9a46e7d": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#32",
+  "question": "X12",
+  "invocation": "FX-1",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "49052cff": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#33",
+  "question": "X13",
+  "invocation": "FX-1",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "d7a1f697": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#34",
+  "question": "X14",
+  "invocation": "FX-1",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "641ec9f5": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#35",
+  "question": "X15",
+  "invocation": "FX-1",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "455ce24e": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#36",
+  "question": "X16",
+  "invocation": "FX-1",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "c9b0fa09": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#37",
+  "question": "X17",
+  "invocation": "FX-1",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "ef7ac980": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#38",
+  "question": "X18",
+  "invocation": "FX-1",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "10af33d7": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#39",
+  "question": "X19",
+  "invocation": "FX-1",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "2dc2a05e": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#40",
+  "question": "X20",
+  "invocation": "FX-1",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "f03af2f2": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#41",
+  "question": "X21",
+  "invocation": "FX-1",
+  "repeat": 2,
+  "status": "blocked",
+  "delivered": false,
+  "error": "HTTPStatusError: 504 from chat/completions: The operation was aborted"
+ },
+ "fa09d256": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#42",
+  "question": "X1",
+  "invocation": "FX-1",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "a293baf6": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#43",
+  "question": "X2",
+  "invocation": "FX-1",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "b5bad109": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#44",
+  "question": "X3",
+  "invocation": "FX-1",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "c6f4a8b8": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#45",
+  "question": "X4",
+  "invocation": "FX-1",
+  "repeat": 3,
+  "status": "blocked",
+  "delivered": false,
+  "error": "HTTPStatusError: 429 from chat/completions: Provider returned error \u2014 deepseek/deepseek-v4.1-flash-1017 is temporarily rate-limited upstream. Please retry short"
+ },
+ "e28d425c": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#46",
+  "question": "X5",
+  "invocation": "FX-1",
+  "repeat": 3,
+  "status": "blocked",
+  "delivered": false,
+  "error": "HTTPStatusError: 504 from chat/completions: The operation was aborted"
+ },
+ "384db180": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#47",
+  "question": "X6",
+  "invocation": "FX-1",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "38389a35": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#48",
+  "question": "X7",
+  "invocation": "FX-1",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "4e827454": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#49",
+  "question": "X8",
+  "invocation": "FX-1",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "827cf793": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#50",
+  "question": "X9",
+  "invocation": "FX-1",
+  "repeat": 3,
+  "status": "blocked",
+  "delivered": false,
+  "error": "HTTPStatusError: 504 from chat/completions: The operation was aborted"
+ },
+ "35a9659c": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#51",
+  "question": "X10",
+  "invocation": "FX-1",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "da8fc933": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#52",
+  "question": "X11",
+  "invocation": "FX-1",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "f1a40218": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#53",
+  "question": "X12",
+  "invocation": "FX-1",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "cdffc425": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#54",
+  "question": "X13",
+  "invocation": "FX-1",
+  "repeat": 3,
+  "status": "blocked",
+  "delivered": false,
+  "error": "HTTPStatusError: 504 from chat/completions: The operation was aborted"
+ },
+ "30ba95c4": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#55",
+  "question": "X14",
+  "invocation": "FX-1",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "7dc3b348": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#56",
+  "question": "X15",
+  "invocation": "FX-1",
+  "repeat": 3,
+  "status": "blocked",
+  "delivered": false,
+  "error": "HTTPStatusError: 504 from chat/completions: The operation was aborted"
+ },
+ "6c6ea24a": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#57",
+  "question": "X16",
+  "invocation": "FX-1",
+  "repeat": 3,
+  "status": "blocked",
+  "delivered": false,
+  "error": "HTTPStatusError: 504 from chat/completions: The operation was aborted"
+ },
+ "9968e5d2": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#58",
+  "question": "X17",
+  "invocation": "FX-1",
+  "repeat": 3,
+  "status": "blocked",
+  "delivered": false,
+  "error": "HTTPStatusError: 504 from chat/completions: The operation was aborted"
+ },
+ "a0832ce3": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#59",
+  "question": "X18",
+  "invocation": "FX-1",
+  "repeat": 3,
+  "status": "blocked",
+  "delivered": false,
+  "error": "HTTPStatusError: 504 from chat/completions: The operation was aborted"
+ },
+ "ea6b7493": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#60",
+  "question": "X19",
+  "invocation": "FX-1",
+  "repeat": 3,
+  "status": "blocked",
+  "delivered": false,
+  "error": "HTTPStatusError: 504 from chat/completions: The operation was aborted"
+ },
+ "3ba5ca4b": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#61",
+  "question": "X20",
+  "invocation": "FX-1",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "f65581fc": {
+  "source": "/home/jb/final-runs/firstx/FX-1/shard-0.jsonl#62",
+  "question": "X21",
+  "invocation": "FX-1",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "fc2b7a64": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#0",
+  "question": "X22",
+  "invocation": "FX-2",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "c0c48487": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#1",
+  "question": "X23",
+  "invocation": "FX-2",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "8327a179": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#2",
+  "question": "X24",
+  "invocation": "FX-2",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "4c73c56e": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#3",
+  "question": "X25",
+  "invocation": "FX-2",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "7e0aaf27": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#4",
+  "question": "X26",
+  "invocation": "FX-2",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "d97a50b8": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#5",
+  "question": "X27",
+  "invocation": "FX-2",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "51e8ccb1": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#6",
+  "question": "X28",
+  "invocation": "FX-2",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "67035e9f": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#7",
+  "question": "X29",
+  "invocation": "FX-2",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "14deaab3": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#8",
+  "question": "X30",
+  "invocation": "FX-2",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "2accdc26": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#9",
+  "question": "X31",
+  "invocation": "FX-2",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "a369ea40": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#10",
+  "question": "X32",
+  "invocation": "FX-2",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "dd71d64f": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#11",
+  "question": "X33",
+  "invocation": "FX-2",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "872ec6a6": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#12",
+  "question": "X34",
+  "invocation": "FX-2",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "b1542141": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#13",
+  "question": "X35",
+  "invocation": "FX-2",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "8c1025d9": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#14",
+  "question": "X36",
+  "invocation": "FX-2",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "ee931aa9": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#15",
+  "question": "X37",
+  "invocation": "FX-2",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "ba89e8c7": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#16",
+  "question": "X38",
+  "invocation": "FX-2",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "856ef08e": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#17",
+  "question": "X39",
+  "invocation": "FX-2",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "efa395a0": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#18",
+  "question": "X40",
+  "invocation": "FX-2",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "ef5c32a6": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#19",
+  "question": "X41",
+  "invocation": "FX-2",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "672e503c": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#20",
+  "question": "X42",
+  "invocation": "FX-2",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "66c5f04c": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#21",
+  "question": "X22",
+  "invocation": "FX-2",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "abee15ca": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#22",
+  "question": "X23",
+  "invocation": "FX-2",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "e1e744a4": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#23",
+  "question": "X24",
+  "invocation": "FX-2",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "3ceaa4f9": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#24",
+  "question": "X25",
+  "invocation": "FX-2",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "247908c7": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#25",
+  "question": "X26",
+  "invocation": "FX-2",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "b20e3b37": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#26",
+  "question": "X27",
+  "invocation": "FX-2",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "ccde1dc9": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#27",
+  "question": "X28",
+  "invocation": "FX-2",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "21b4da17": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#28",
+  "question": "X29",
+  "invocation": "FX-2",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "aa109a5d": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#29",
+  "question": "X30",
+  "invocation": "FX-2",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "669a9b28": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#30",
+  "question": "X31",
+  "invocation": "FX-2",
+  "repeat": 2,
+  "status": "blocked",
+  "delivered": false,
+  "error": "Implementation blocked on an ask it cannot satisfy: implementation names an ask it cannot satisfy: ask 5: The ask is the year carried by the name of the LIPD Cl"
+ },
+ "b47aca3d": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#31",
+  "question": "X32",
+  "invocation": "FX-2",
+  "repeat": 2,
+  "status": "blocked",
+  "delivered": false,
+  "error": "HTTPStatusError: 504 from chat/completions: The operation was aborted"
+ },
+ "4ac43de0": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#32",
+  "question": "X33",
+  "invocation": "FX-2",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "a07c0fe1": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#33",
+  "question": "X34",
+  "invocation": "FX-2",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "ecc14860": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#34",
+  "question": "X35",
+  "invocation": "FX-2",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "f4d3b486": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#35",
+  "question": "X36",
+  "invocation": "FX-2",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "42d751d4": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#36",
+  "question": "X37",
+  "invocation": "FX-2",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "67fc02ae": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#37",
+  "question": "X38",
+  "invocation": "FX-2",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "8b5fe28c": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#38",
+  "question": "X39",
+  "invocation": "FX-2",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "91c26978": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#39",
+  "question": "X40",
+  "invocation": "FX-2",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "1fc5eeda": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#40",
+  "question": "X41",
+  "invocation": "FX-2",
+  "repeat": 2,
+  "status": "blocked",
+  "delivered": false,
+  "error": "HTTPStatusError: 429 from chat/completions: Provider returned error \u2014 deepseek/deepseek-v4.1-flash-1017 is temporarily rate-limited upstream. Please retry short"
+ },
+ "44cecda9": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#41",
+  "question": "X42",
+  "invocation": "FX-2",
+  "repeat": 2,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "09d1ff55": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#42",
+  "question": "X22",
+  "invocation": "FX-2",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "c4cc931e": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#43",
+  "question": "X23",
+  "invocation": "FX-2",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "56e44526": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#44",
+  "question": "X24",
+  "invocation": "FX-2",
+  "repeat": 3,
+  "status": "blocked",
+  "delivered": false,
+  "error": "HTTPStatusError: 504 from chat/completions: The operation was aborted"
+ },
+ "2999fe61": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#45",
+  "question": "X25",
+  "invocation": "FX-2",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "670ae84a": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#46",
+  "question": "X26",
+  "invocation": "FX-2",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "0f2f13a7": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#47",
+  "question": "X27",
+  "invocation": "FX-2",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "165faf6a": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#48",
+  "question": "X28",
+  "invocation": "FX-2",
+  "repeat": 3,
+  "status": "blocked",
+  "delivered": false,
+  "error": "HTTPStatusError: 504 from chat/completions: The operation was aborted"
+ },
+ "e7c34c60": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#49",
+  "question": "X29",
+  "invocation": "FX-2",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "03326cab": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#50",
+  "question": "X30",
+  "invocation": "FX-2",
+  "repeat": 3,
+  "status": "blocked",
+  "delivered": false,
+  "error": "HTTPStatusError: 504 from chat/completions: The operation was aborted"
+ },
+ "3ebf5d40": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#51",
+  "question": "X31",
+  "invocation": "FX-2",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "e5c681b3": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#52",
+  "question": "X32",
+  "invocation": "FX-2",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "450b2f74": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#53",
+  "question": "X33",
+  "invocation": "FX-2",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "7e9bcff4": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#54",
+  "question": "X34",
+  "invocation": "FX-2",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "a2bc5201": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#55",
+  "question": "X35",
+  "invocation": "FX-2",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "ca25f84d": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#56",
+  "question": "X36",
+  "invocation": "FX-2",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "bb96ab75": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#57",
+  "question": "X37",
+  "invocation": "FX-2",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "2f101cad": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#58",
+  "question": "X38",
+  "invocation": "FX-2",
+  "repeat": 3,
+  "status": "blocked",
+  "delivered": false,
+  "error": "HTTPStatusError: 429 from chat/completions: Provider returned error \u2014 deepseek/deepseek-v4.1-flash-1017 is temporarily rate-limited upstream. Please retry short"
+ },
+ "6a4ab2b0": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#59",
+  "question": "X39",
+  "invocation": "FX-2",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "c955aaf6": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#60",
+  "question": "X40",
+  "invocation": "FX-2",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "4164b6f3": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#61",
+  "question": "X41",
+  "invocation": "FX-2",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "5e9677de": {
+  "source": "/home/jb/final-runs/firstx/FX-2/shard-0.jsonl#62",
+  "question": "X42",
+  "invocation": "FX-2",
+  "repeat": 3,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ }
+}

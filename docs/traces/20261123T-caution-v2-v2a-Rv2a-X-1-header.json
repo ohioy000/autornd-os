@@ -1,0 +1,25 @@
+{
+ "models": {
+  "triage": "tencent/hy4-flash",
+  "engineering": "deepseek/deepseek-v4.1-flash-1017",
+  "architecture": "xiaomi/mimo-v2.6-pro:exacto",
+  "escalation": "google/gemini-4-argon",
+  "research": "z-ai/glm-5.3",
+  "search": "perplexity/sonar",
+  "ranker": "qwen/qwen3-reranker-8b",
+  "judge": "qwen/qwen3-235b-a22b-2507:exacto",
+  "recompute": "anthropic/claude-haiku-5.5",
+  "decision": "perplexity/pplx-decider-v1.2"
+ },
+ "provider_order": "triage:tencent/fp8,engineering:deepinfra/fp8,architecture:streamlake,escalation:google-vertex/global,search:Perplexity,research:wafer/us,ranker:Fireworks,judge:deepinfra/fp8,premium:,recompute:Anthropic",
+ "set": "professional-holdout",
+ "dataset_version": "frozen-2026-10-03",
+ "scorer_version": "frozen-2026-10-03.4",
+ "golden_keys_version": 1,
+ "workflows": [
+  "answer-and-recompute"
+ ],
+ "repeats": 3,
+ "shards": 1,
+ "max_spend_per_shard": 0.33
+}

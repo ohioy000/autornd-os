@@ -1,0 +1,28 @@
+{
+ "c83af71b": {
+  "verdict": "wrong",
+  "note": "Y68 N2: second reading over the whole answer: gives 'wheel' as the type UI Events requires and never says the section moved to Pointer Events; the key's answer is that no such value is stated. Agrees with the blind reader."
+ },
+ "8eaf653e": {
+  "verdict": "partly",
+  "note": "Y124 N2: second reading: the wind-speed item is right; the 25 Hz item gives 25 Hz as the cut-off of the accelerometer's signal-conditioning equipment but quotes a different sentence and says nothing of input above 25 Hz being removed for its low energy content. Agrees with the blind reader; held as partly, not right, because the key's reason is missing. The wrong claim outside the key is the quoted sentence."
+ },
+ "0dd1859c": {
+  "verdict": "partly",
+  "note": "Y149 N4: second reading: the 2014 transition figures 4 percent and 5.5 percent are right; Ask 2 is declared blocked for want of a page, and the 4.5 and 6 percent figures are given only as a conditional. Two of four key items not committed to. Agrees."
+ },
+ "1fd651cf": {
+  "verdict": "wrong",
+  "note": "Y140 O: the delivered answer is the single word PLACEHOLDER. Agrees."
+ },
+ "4fb02bd5": {
+  "verdict": "wrong",
+  "note": "Y146 O: 68 and 15 million are right; the answer says the page prints no sum and gives none, where the key's third item is 83 million. Agrees."
+ },
+ "e596ec2f": {
+  "verdict": "wrong",
+  "note": "Y170 O: says the review states no threshold; the review says energies in excess of 1 EeV (exclusive). Agrees."
+ },
+ "overrides": {},
+ "checked_beyond_the_non_right": "every right answer was screened for the key's numbers by a script (two of 220 lacked a key number in the answer's text, Y168 and Y178, both read by hand and right: the number was a section number of the key's wording, and a value written in scientific notation); the six trap-keyed answers were screened for a statement that the figure is absent; six more were drawn at random by seed 20261122, three from the batches of the two readers who marked every answer right, and read against the keys: Y171, Y147, Y162, Y158, Y17, Y26, all right."
+}

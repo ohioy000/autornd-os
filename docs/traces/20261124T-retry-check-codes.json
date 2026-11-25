@@ -1,0 +1,146 @@
+{
+ "ad32ae0e": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/rc-runs/FX-1/shard-0.jsonl#0",
+  "question": "X4",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "f392e9e1": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/rc-runs/FX-1/shard-0.jsonl#1",
+  "question": "X5",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "8e930dc0": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/rc-runs/FX-1/shard-0.jsonl#2",
+  "question": "X9",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "86157ff7": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/rc-runs/FX-1/shard-0.jsonl#3",
+  "question": "X13",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "70a1bc49": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/rc-runs/FX-1/shard-0.jsonl#4",
+  "question": "X15",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "bfa9cfac": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/rc-runs/FX-1/shard-0.jsonl#5",
+  "question": "X16",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "32ae20d7": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/rc-runs/FX-1/shard-0.jsonl#6",
+  "question": "X17",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "f0432cb9": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/rc-runs/FX-1/shard-0.jsonl#7",
+  "question": "X18",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "beaded6c": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/rc-runs/FX-1/shard-0.jsonl#8",
+  "question": "X19",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "d7ebf19a": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/rc-runs/FX-1/shard-0.jsonl#9",
+  "question": "X21",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "bfb7194c": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/rc-runs/FX-1/shard-0.jsonl#10",
+  "question": "X24",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "7fc624d7": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/rc-runs/FX-1/shard-0.jsonl#11",
+  "question": "X28",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "a5afd2cb": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/rc-runs/FX-1/shard-0.jsonl#12",
+  "question": "X30",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "f75a7b26": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/rc-runs/FX-1/shard-0.jsonl#13",
+  "question": "X32",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "9397b576": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/rc-runs/FX-1/shard-0.jsonl#14",
+  "question": "X38",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ },
+ "13bd393b": {
+  "source": "/tmp/claude-1000/-home-jb-autornd-os/53890ce8-e23c-597b-9d83-6ae0b3a7361e/scratchpad/rc-runs/FX-1/shard-0.jsonl#15",
+  "question": "X41",
+  "invocation": "FX-1",
+  "repeat": 1,
+  "status": "completed",
+  "delivered": true,
+  "error": ""
+ }
+}

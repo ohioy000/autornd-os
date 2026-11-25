@@ -1,0 +1,100 @@
+{
+ "aee60228": {
+  "verdict": "right",
+  "stated": "CET1 4.5%, tier 1 6%, total 8%, leverage 4%",
+  "evidence": "A leverage ratio of 4 percent.",
+  "outside_wrong": false,
+  "note": "3% SLR listed as conditional extra, not a general minimum"
+ },
+ "aea11dc2": {
+  "verdict": "right",
+  "stated": "6 a.m. to 10 p.m. Eastern (EST/EDT as in effect); excludes Saturdays, Sundays, Federal holidays",
+  "evidence": "from 6 a.m. to 10 p.m., Eastern Standard Time or Eastern Daylight Saving Time, whichever is currently in effect",
+  "outside_wrong": false,
+  "note": "9-5:30 principal office hours noted as different"
+ },
+ "f4d65294": {
+  "verdict": "right",
+  "stated": "As quickly as possible, no later than close of the following working day",
+  "evidence": "as quickly as possible, and no later than the close of the following working day.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "640994c8": {
+  "verdict": "right",
+  "stated": "3.8% on lesser of NII or MAGI over filing-status threshold",
+  "evidence": "The NIIT is a 3.8% tax on the lesser of your net investment income or the amount of your modified adjusted gross income (MAGI) that is over a threshold amount",
+  "outside_wrong": false,
+  "note": "thresholds 250k/125k/200k correct"
+ },
+ "166e88f2": {
+  "verdict": "right",
+  "stated": "99.5% confidence over one-year period; equivalent ruin 0.5% / 1-in-200",
+  "evidence": "Equivalent ruin frequency: 0.5% per annum \u2014 i.e. a 1-in-200-year ruin event.",
+  "outside_wrong": false,
+  "note": "Calls the ruin frequency derived, not stated in retrieved text; still commits to 1 in 200; one year = 12 months"
+ },
+ "88231a8c": {
+  "verdict": "right",
+  "stated": "L2A $68M, L2B $15M, sum $83M",
+  "evidence": "Sum = 83.0 USD millions.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "ce8e3519": {
+  "verdict": "right",
+  "stated": "Cap $10B; excess $1B; 5% assessment triggered (threshold $2B)",
+  "evidence": "Ask 4 [verdict]: TRIGGERED \u2014 5% threshold = USD 2,000,000,000",
+  "outside_wrong": false,
+  "note": "Extra 15% major-counterparty sensitivity disclosed, not adopted"
+ },
+ "fc814f42": {
+  "verdict": "right",
+  "stated": "No exclusion; threshold $25,000; only the $26,000 item quantified",
+  "evidence": "Item B | 26,000 | ... Yes | Quantify in footnote",
+  "outside_wrong": false,
+  "note": "Notes residual $70k composition caveat but commits"
+ },
+ "c98d520c": {
+  "verdict": "right",
+  "stated": "2014: CET1 4.0%, tier 1 5.5%; Part 3 text: 4.5% and 6%",
+  "evidence": "CET1 .... 4.0 percent ... Tier 1 ... 5.5 percent",
+  "outside_wrong": false,
+  "note": "Both pairs given correctly"
+ },
+ "1e860d34": {
+  "verdict": "right",
+  "stated": "No single rate; 19% up to 50k; 25% above 250k; main rate less marginal relief between",
+  "evidence": "From 1 April 2023 there is no longer a single Corporation Tax rate for non-ring fence profits.",
+  "outside_wrong": false,
+  "note": "Marginal relief formula 3/200 correct"
+ },
+ "86537abd": {
+  "verdict": "right",
+  "stated": "None: Part 3 imposes no CET1 minimum directly on a Federal branch",
+  "evidence": "12 CFR Part 3 imposes NO common equity tier 1 (CET1) capital ratio directly on a Federal branch of a foreign bank.",
+  "outside_wrong": false,
+  "note": "Rests on addressee language of 3.10, not on 3.1 scope text, but reaches the key conclusion"
+ },
+ "0923a302": {
+  "verdict": "right",
+  "stated": "No on both: subpart A does not cover companies or business-purpose individuals",
+  "evidence": "does not cover information about companies and does not cover information about individuals who obtain financial products or services primarily for business purposes.",
+  "outside_wrong": false,
+  "note": ""
+ },
+ "17a69681": {
+  "verdict": "right",
+  "stated": "EUR 20 000 at all times",
+  "evidence": "EUR 20 000.",
+  "outside_wrong": false,
+  "note": "Distinguishes 50k, 125k tiers and Art 32 3M threshold"
+ },
+ "3907db87": {
+  "verdict": "right",
+  "stated": "Report no later than the working day following; keep records at least five years after termination",
+  "evidence": "at least 5 years following the termination of the contract.",
+  "outside_wrong": false,
+  "note": "TR 10-year figure explicitly separated"
+ }
+}

@@ -1,0 +1,40 @@
+answers read: 226 of 230 made; missing verdicts: 0
+BAR 1  right, N1-N6: 169 of 174 made (172 delivered)   (bar: at least 138 of 174)
+BAR 7  group 1: 12 of 13 made = 92.3%   (bar: at least 50%)
+BAR 7  group 2: 14 of 14 made = 100.0%   (bar: at least 50%)
+BAR 7  group 3: 14 of 14 made = 100.0%   (bar: at least 50%)
+BAR 7  group 4: 11 of 12 made = 91.7%   (bar: at least 50%)
+BAR 7  group 5: 13 of 14 made = 92.9%   (bar: at least 50%)
+BAR 7  group 6: 14 of 14 made = 100.0%   (bar: at least 50%)
+BAR 7  group 7: 10 of 10 made = 100.0%   (bar: at least 50%)
+BAR 7  group 8: 13 of 13 made = 100.0%   (bar: at least 50%)
+BAR 7  group 9: 13 of 14 made = 92.9%   (bar: at least 50%)
+BAR 7  group 10: 14 of 14 made = 100.0%   (bar: at least 50%)
+BAR 7  group 11: 13 of 14 made = 92.9%   (bar: at least 50%)
+BAR 7  group 12: 14 of 14 made = 100.0%   (bar: at least 50%)
+BAR 7  group 13: 14 of 14 made = 100.0%   (bar: at least 50%)
+BAR 2  not-right answers carrying a confirmation: 1 of 3; whether the ask a confirmation covers is the wrong one is read off the listing below
+BAR 3  right answers with no caution: 130 of 169   (bar: at least half)
+BAR 4  wrong answers with a pointing caution: 0 of 3   (bar: at least half)
+ARM N1: 57 right of 59 made (57 delivered); cost an answer $0.0127; total $0.72; seconds an answer 153
+ARM N2: 57 right of 59 made (59 delivered); cost an answer $0.0161; total $0.95; seconds an answer 201
+ARM N3: 14 right of 14 made (14 delivered); cost an answer $0.0258; total $0.36; seconds an answer 228
+ARM N4: 13 right of 14 made (14 delivered); cost an answer $0.0715; total $1.00; seconds an answer 257
+ARM N5: 14 right of 14 made (14 delivered); cost an answer $0.0569; total $0.80; seconds an answer 190
+ARM N6: 14 right of 14 made (14 delivered); cost an answer $0.0125; total $0.18; seconds an answer 202
+ARM O: 51 right of 56 made (54 delivered); cost an answer $0.0129; total $0.70; seconds an answer 128
+BAR 5  total cost of the 226 delivered answers: $4.71   (bar: run within $7.00; N1/N2 at most $0.02 an answer)
+BAR 6  answers made but not delivered: 4 of 230   (bar: at most 5)
+COMPARISON groups 10-13 (56 questions): N right 55, O right 51, N - O = +4   (better at +5 or more; no difference shown between -3 and +4; worse at -4 or less)
+   group 10: N 14 right, O 13 right, of 14
+   group 11: N 13 right, O 13 right, of 14
+   group 12: N 14 right, O 13 right, of 14
+   group 13: N 14 right, O 12 right, of 14
+EVERY ANSWER NOT RIGHT (all arms):
+  Y68 N2 c83af71b wrong confirmed=False points=False cautions=0 figures=[(1, 'wheel'), (2, 'A user agent MUST dispatch this event when a mouse wheel has
+  Y124 N2 8eaf653e partly confirmed=True points=False cautions=0 figures=[(2, 'no'), (3, 25.0)]
+  Y140 O 1fd651cf wrong confirmed=False points=False cautions=0 figures=[(1, 'yes_except_to_the_extent_not_feasible_or_injustice'), (2, 'former_evidenti
+  Y146 O 4fb02bd5 wrong confirmed=False points=True cautions=1 figures=[(1, 'level 2A liquid asset amount = 68; level 2B liquid asset amount = 15')]
+      caution: Two pages handed on give different figures for the same thing: 85 on ecfr.gov/current/title-12/part-329 and 50 on govinfo.gov/content/pkg/cfr-2026-title12-vol5/pdf/cfr-2026-title12
+  Y149 N4 0dd1859c partly confirmed=False points=False cautions=0 figures=[(1, '4% CET1 / 5.5% Tier 1')]
+  Y170 O e596ec2f wrong confirmed=False points=False cautions=0 figures=[(1, 'not_stated'), (2, 'not_stated')]

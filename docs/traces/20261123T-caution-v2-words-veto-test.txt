@@ -1,0 +1,9 @@
+(output of docs/probes/absence_words_veto_test.py, run from the caution branch tree on 2026-11-23: for each question whose answer said none stated, the pages the proofs searched are fetched again and the proof is made with the run's words and with the stronger model's)
+H9 ask 1: pages read 6 of 6; proofs with our words 6, with the stronger model's 6; pages where only ours proves absence: []
+H9 ask 2: pages read 6 of 6; proofs with our words 0, with the stronger model's 5; pages where only ours proves absence: []
+X19 ask 1: pages read 10 of 10; proofs with our words 1, with the stronger model's 1; pages where only ours proves absence: []
+X19 ask 2: pages read 10 of 10; proofs with our words 0, with the stronger model's 0; pages where only ours proves absence: []
+X19 ask 3: pages read 10 of 10; proofs with our words 10, with the stronger model's 3; pages where only ours proves absence: 7 pages (NIST SP 800-53 PDFs, opensecurityarchitecture.org, bsafes.com, csrc.nist.gov)
+X36 ask 1: pages read 1 of 1; proofs with our words 1, with the stronger model's 1; pages where only ours proves absence: []
+X41 ask 1: pages read 8 of 8; proofs with our words 6, with the stronger model's 6; pages where only ours proves absence: []
+X41 ask 2: pages read 8 of 8; proofs with our words 5, with the stronger model's 0; pages where only ours proves absence: 5 pages (microchip.com x3, electronicsinfoline.com, circuitbase.tech)
