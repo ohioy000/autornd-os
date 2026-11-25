@@ -28,7 +28,7 @@ Preregistered in `docs/preregistration-20261125-dspace-frames.md` (4805482), pus
 
 **The 404** is the preregistered stop condition ("any 404"). The invocation had no way to stop itself and ran its other four units; I did not stop it
 either, because X19 was its first unit and the cost of the rest was bounded by the cap. It is the owner's matter (G-2/G-3, the model line-up): the
-`:exacto` variant of the architecture model had no endpoint for that call and did not on none of the 40 or so calls of the earlier tests today.
+`:exacto` variant of the architecture model had no endpoint for that one call; no 404 appears in the logs of the page-quality or edition-check runs earlier today.
 
 ## Against the predictions
 
