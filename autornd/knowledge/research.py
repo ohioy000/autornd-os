@@ -815,7 +815,7 @@ async def _ask_documents(client, request: str, asked: list[str],
     proofs: list[Proof] = []
     if asks and read:
         searched = await name_terms(client, request, asks)
-        proofs = prove(searched, read)
+        proofs = prove(searched, read, request)
     return Finding(
         question=question, citations=[d["url"] for d in documents],
         model=response.model, asked=[question], quotes=quotes,

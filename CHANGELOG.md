@@ -29,6 +29,23 @@ Changed (2026-11-23, the owner's ruling): the owner's standing line-up no longer
 of the unpinned arm (no gain shown for the pins at 3.1 times the cost) and of the reader's on/off test of 2026-11-21 (no benefit shown). The code for
 both stays and is off when the setting is empty, so nothing in the harness changed; the second triage model and the field profiles stay.
 
+Fixed (2026-11-25, the owner's instruction "Longer time out", resolved at its root): a host is now reached on its IPv4 address first. The X38 miss was not slow reading: `mutcd-dr.fhwa.dot.gov` lists an IPv6 address first, this machine has no IPv6 route, and every fetch of its pages hung to the 60 s limit while curl read the same pages in about 1 s. Read live the same day, the two 2009 pages that timed out three times in a row now fetch in full (47,087 and 341,325 characters). The limit stays 60, since a longer wait would not have helped and the run budget allows no more. 2 new tests, the guarded line broken once.
+
+Corrected (2026-11-25): the removal of X41 from the first hold-out (#343) is undone, and the set is again the 42 questions as signed. The removal rested on my claim that a real page for the same part gives a thermal figure. Read again the same day, that page is the AVR DA family's (AVR128DA28 and its kin, Table 37-9, 60 degC/W for the 28-pin PDIP), not the ATmega328P's, so the three answers that quoted it took a figure from another family, the very trap the key's commonly_confused field names, and the key, which says the datasheet states none, was right. No code changes; the guard test of the removal is deleted with it.
+
+Added (2026-11-23, the owner's instruction to plan and implement a fix for the warning flaw; on a branch, for the owner's ruling):
+the delivery says what the answer itself leaves open, read off its typed fields and never off its prose. An ask of kind value or
+verdict with no typed result and no claim that the document states none, a `blocked_on` note the run completed on, an ask the
+answer reports as not stated (with what the check behind that was), and an answer text under 30 words beside typed results each
+add a caution that names the ask or the text. Replayed over the 681 labelled answers of four runs, the new cautions stand beside
+8 of the 658 right answers (1.2 percent) and 5 of the 23 that were not right, each pointing at the part that was wrong, where the
+shipped cautions stand beside 25 percent of the right and 35 percent of the not-right and rarely at the wrong part; 11 of the 23
+still come clean. The five are in-sample, and the review says why free checks cannot reach the rest and what two paid levers would
+cost to measure. 30 new tests, each of 16 guarded lines broken once. Nothing is paid for and no answer changes. The record is
+`docs/reviews/2026-11-23-caution-flaw.md`, and `docs/probes/caution_replay.py` reproduces every figure from the committed traces.
+
+Fixed (2026-11-23): the suite's one warning, a class-level asyncio mark on a class that holds one async test and one that is not.
+
 Changed (2026-11-22, the owner's ruling: "make sure any model can be used for any tier ... plug and play"): the spend guard bounds
 any catalogue price at its highest rate instead of leaving a model blind. The worst case now takes, for each side of a call, the
 highest rate across the entry and its time-of-day or prompt-size `overrides`, with every cache component counted on the prompt

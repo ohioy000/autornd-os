@@ -52,6 +52,17 @@ _RATE_LIMIT_BACKOFF_S = 2.0
 # cannot fall back and the caller holds a scenario clock.
 _TRANSIENT_TLS_ATTEMPTS = 2
 _TRANSIENT_TLS_BACKOFF_S = 1.0
+# A 504 on the answer call: the gateway gave up on the serving and said "The operation was aborted". The
+# first hold-out asked again (2026-11-24, docs/reviews/2026-11-24-first-holdout-same-set.md) lost 13 of 126
+# units to it, all on the answer model, 11 of them in the third draw and none retried: the unit ended blocked
+# with no answer, 1 unit in 10 where the old run had 4 undelivered units in all. Unlike a 429 the attempt may have been
+# dispatched and billed, so the retry goes through the same reservation path as the transport retries (the
+# failed attempt keeps its own worst case as liability, the retry is re-checked against the ceiling).
+# Three attempts is two retries, 2 s and 4 s of waiting: bounded because a pinned tier cannot fall back and
+# the caller holds a scenario clock. WHETHER A RETRY WITHIN 6 s IS SERVED is not yet measured: the third draw
+# may have been a window longer than that, and the next paid run is what says.
+_GATEWAY_TIMEOUT_ATTEMPTS = 3
+_GATEWAY_TIMEOUT_BACKOFF_S = 2.0
 # The reservation holder's marker for a retry whose backoff
 # was interrupted before it left this process. Measured
 # 2026-10-10 (the advisor's probe): a cancellation landing
@@ -728,6 +739,8 @@ class OpenRouterClient:
     # The read-error retry (2026-11-13): a connection reset while the
     # response was being read, counted as its own class.
     RETRY_READ_ERROR = "read_error"
+    # The 504 retry (2026-11-24): the gateway aborted the call. Counted as its own class.
+    RETRY_GATEWAY_TIMEOUT = "gateway_timeout"
 
     def _count_retry(self, kind: str) -> None:
         self.retries_by_kind[kind] = self.retries_by_kind.get(kind, 0) + 1
@@ -754,7 +767,8 @@ class OpenRouterClient:
                 self.RETRY_EMPTY_REPLY, self.RETRY_PARSE_FAILURE,
                 self.RETRY_TRANSIENT_TLS,
                 self.RETRY_SERVER_DISCONNECT,
-                self.RETRY_READ_ERROR],
+                self.RETRY_READ_ERROR,
+                self.RETRY_GATEWAY_TIMEOUT],
         }
 
     async def _post_retrying_transient_faults(
@@ -857,6 +871,45 @@ class OpenRouterClient:
                     reservation_holder[0] = _RETRY_NEVER_DISPATCHED
                     raise
         raise AssertionError("unreachable")  # pragma: no cover
+
+    async def _retry_gateway_timeout(
+            self, client: httpx.AsyncClient, payload: dict[str, Any],
+            model: str, function: str, prompt_bytes: int, max_tokens: int,
+            reservation_holder: list[Any], attempt: int) -> httpx.Response:
+        """One retry of a call the gateway answered with a 504.
+
+        The failed attempt was dispatched, so it keeps its own worst case as
+        unreconciled liability before the retry leaves, and the retry is
+        re-checked against what remains (refused, not made, when it does not
+        fit), exactly as `_post_retrying_transient_faults` does for a
+        transport fault. A backoff interrupted before the retry leaves
+        releases the retry's reservation and marks the holder, as there.
+        """
+        self._fail_call(function, model, "error_status",
+                        reservation_holder[0])
+        reservation_holder[0] = self._guard_spend(
+            function, model, prompt_bytes, max_tokens)
+        self._in_flight += 1
+        self._count_retry(self.RETRY_GATEWAY_TIMEOUT)
+        delay = _GATEWAY_TIMEOUT_BACKOFF_S * (2 ** (attempt - 1))
+        logger.warning(
+            "504 for %s (attempt %d/%d) — the gateway aborted the call, "
+            "retrying in %.1fs", model, attempt,
+            _GATEWAY_TIMEOUT_ATTEMPTS, delay)
+        try:
+            await asyncio.sleep(delay)
+        except BaseException:
+            self._in_flight = max(0, self._in_flight - 1)
+            held = reservation_holder[0]
+            if held is not None and not held.released:
+                held.released = True
+                self._reservations.remove(held)
+                self.reserved -= held.worst
+            reservation_holder[0] = _RETRY_NEVER_DISPATCHED
+            raise
+        return await self._post_retrying_transient_faults(
+            client, "/chat/completions", payload, model, function,
+            prompt_bytes, max_tokens, reservation_holder)
 
     async def _get_client(self) -> httpx.AsyncClient:
         if self._client is None or self._client.is_closed:
@@ -1122,6 +1175,12 @@ class OpenRouterClient:
                     client, "/chat/completions", payload, model,
                     function, prompt_bytes, max_tokens,
                     reservation_holder)
+            for attempt in range(1, _GATEWAY_TIMEOUT_ATTEMPTS):
+                if resp.status_code != 504:
+                    break
+                resp = await self._retry_gateway_timeout(
+                    client, payload, model, function, prompt_bytes,
+                    max_tokens, reservation_holder, attempt)
             _raise_for_status(resp, "chat/completions")
             data = resp.json()
 

@@ -654,3 +654,28 @@ class TestTheWholeGraphEndToEnd:
         (answer,) = [c for c in calls if c["user"].startswith("Produce the answer")]
         assert "not_stated" not in answer["user"] and "proof of absence" not in answer["user"]
         assert state.status == "completed" and state.outputs["context"]["proven"] == []
+
+
+@pytest.mark.asyncio
+class TestTheLookupHandsTheRequestToTheProof:
+    """The edition check (owner's ruling of 2026-11-25) needs the user's request, which is where the year is named."""
+
+    WORDS_2018 = ["thermal resistance 2018", "junction-to-ambient 2018", "theta JA 2018"]
+
+    async def test_a_page_with_no_year_the_request_names_is_not_a_proof(self, monkeypatch):
+        serve(monkeypatch, {DATASHEET_URL: DATASHEET})
+        client = lookup_client([DATASHEET_URL], words=self.WORDS_2018)
+        (finding,) = await research_gaps(client, "Give the 2018 thermal resistance", GAPS, asks=ASKS)
+        assert finding.proofs == []
+
+    async def test_the_same_page_is_a_proof_when_the_request_names_no_year(self, monkeypatch):
+        serve(monkeypatch, {DATASHEET_URL: DATASHEET})
+        client = lookup_client([DATASHEET_URL], words=self.WORDS_2018)
+        (finding,) = await research_gaps(client, "Give the thermal resistance", GAPS, asks=ASKS)
+        assert [p.url for p in finding.proofs] == [DATASHEET_URL]
+
+    async def test_a_page_that_carries_the_year_is_a_proof(self, monkeypatch):
+        serve(monkeypatch, {DATASHEET_URL: DATASHEET + " Edition of 2018."})
+        client = lookup_client([DATASHEET_URL], words=self.WORDS_2018)
+        (finding,) = await research_gaps(client, "Give the 2018 thermal resistance", GAPS, asks=ASKS)
+        assert [p.url for p in finding.proofs] == [DATASHEET_URL]

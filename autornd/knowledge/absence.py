@@ -28,6 +28,7 @@ in the middle of "resis-tance", ligatures).
 from __future__ import annotations
 
 import logging
+import re
 import unicodedata
 from dataclasses import dataclass
 from typing import Any
@@ -60,6 +61,15 @@ SQUASH_FROM = 6
 PROVABLE_KINDS = ("value", "verdict", "")
 
 TERMS_MAX_TOKENS = 2000
+# A page with fewer characters than this is an empty extraction, not a document, and proves nothing: a search
+# of a page with no text finds no word, so "none stated" would be proved on nothing. Measured on the first
+# hold-out asked again (2026-11-24): a PDF that extracted as 33 characters was read "in full", proved both
+# asks of X3 absent, and the answer went out saying the figures the page holds were not stated, wrong. Cut at
+# 200 and not higher on purpose: the proofs on pages of 1,770 to 2,079 characters (X31's) stood beside right
+# answers in every draw that carries one, so only an empty extraction is excluded, and the cut is not tuned
+# to a page that was wrong at a larger size. Whether this turns the X3 answer right is not claimed: with no
+# proof the lookup hands on the blocked note, as it does for any ask it cannot prove.
+MIN_PROOF_PAGE_CHARS = 200
 
 TERMS_PROMPT = """\
 Below is a request and its asks, numbered. For each ask that wants a figure, a name, a date or a rule, \
@@ -207,6 +217,14 @@ async def name_terms(client, request: str, asks: list[Any] | None) -> dict[int, 
             temperature=0.0,
             max_tokens=TERMS_MAX_TOKENS,
             schema=TermsVerdict,
+            # Thinking off (owner's "do it" of 2026-11-23, probed the same day): the cheapest tier is a
+            # reasoning model, and at the default it spent all 2000 tokens thinking and returned no text,
+            # three tries in a row, on all three requests probed, so the words, and with them every proof,
+            # were missing for 188 of the 199 eligible units of the second hold-out run (the swallowed
+            # failure below is why nobody saw it). With thinking off the same three requests came back in
+            # 48 to 76 tokens at about '$0.00002' each, the words being the ones the key of X41 lists.
+            # Medium effort and a budget of 6000 both still returned nothing.
+            reasoning={"enabled": False},
         )
         verdict = TermsVerdict(**data)
     except BudgetExceeded:
@@ -245,11 +263,29 @@ class Proof:
                 "pages": self.pages, "fetched_at": self.fetched_at, "sha256": self.sha256}
 
 
-def prove(terms: dict[int, list[str]], read: dict[str, Any]) -> list[Proof]:
+# A year the request names. The owner's ruling of 2026-11-25 (the edition check): X35 asked for the CODATA 2018
+# value and every page its proofs were made on was the 2022 adjustment, so the words of the 2018 value were
+# truly absent from them and the answer said the value was not stated. A page that does not carry a year
+# the question names is not shown to be the edition the question is about, so it proves nothing. Read over
+# 453 stored proofs on 302 pages (2026-11-25, docs/proposals/2026-11-25-edition-check.md): 12 of 419 scored
+# proofs dropped (10 X35, 2 X38), none of the 102 on questions whose key says none. A year in the search
+# words that the request does not name is a guessed answer ("2025 to 2043"), not an identifier: not counted.
+_YEAR = re.compile(r"(?<!\d)(19[5-9]\d|20[0-4]\d)(?!\d)")
+
+
+def edition_missing(request: str, words: list[str], text: str) -> set[str]:
+    """The years the request names and the ask's search words repeat that are on no part of `text`."""
+    named = set(_YEAR.findall(request)) & set(_YEAR.findall(" ".join(words)))
+    return named - set(_YEAR.findall(text)) if named else set()
+
+
+def prove(terms: dict[int, list[str]], read: dict[str, Any], request: str = "") -> list[Proof]:
     """The proofs: for each ask with at least MIN_TERMS words, each page read in full that has none.
 
     `read` is the pages read in full, by address (a `Source` that was fetched); a page that was not read
     in full is not in it and so proves nothing. Free and deterministic: no model reads a page here.
+    `request` is the user's request: a page that carries no year the request names and the ask's words
+    repeat is of another edition and proves nothing (the edition check, above). Without it every page counts.
     """
     proofs: list[Proof] = []
     texts = {url: Searchable(page.text) for url, page in read.items()}
@@ -258,7 +294,11 @@ def prove(terms: dict[int, list[str]], read: dict[str, Any]) -> list[Proof]:
         if len(words) < MIN_TERMS:
             continue
         for url, page in read.items():
+            if len(page.text) < MIN_PROOF_PAGE_CHARS:
+                continue
             if any(texts[url].has(word) for word in words):
+                continue
+            if edition_missing(request, words, page.text):
                 continue
             proofs.append(Proof(
                 ask=ask, terms=tuple(words), url=url, chars=len(page.text),

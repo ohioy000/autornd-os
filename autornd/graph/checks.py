@@ -395,6 +395,43 @@ def asks_anchored(asks: list[Any], request: str) -> Result:
     )
 
 
+def numbered_asks(proposals: Any, request: str) -> list[dict[str, Any]]:
+    """The proposals that anchor in the request, numbered as `asks_anchored` numbers them: in order,
+    from 1, counting only the ones that anchor. Empty when none anchors; the whole request is then the
+    one ask, which `asks_anchored` says and this does not.
+
+    Free, and with none of `asks_anchored`'s side effect: that check counts every proposal it demotes,
+    which is right once in the run that makes the asks and wrong each time a finished run is read
+    again for its delivery. tests/test_answer_gaps.py pins the two to one numbering.
+    """
+    anchored: list[dict[str, Any]] = []
+    for proposal in proposals or []:
+        quote = str(_ask_field(proposal, "quote") or "").strip()
+        if quote_anchors(quote, request):
+            kind = _ask_field(proposal, "kind")
+            anchored.append({"number": len(anchored) + 1, "quote": quote,
+                             "kind": str(getattr(kind, "value", kind) or "").strip()})
+    return anchored
+
+
+def asks_named(entries: Any, anchored: list[Any]) -> set[int]:
+    """The numbers of the anchored asks a list of typed entries names: the answer's results, its
+    "none stated" claims. An entry names an ask as the recompute vote reads it (`_recompute_names`):
+    by number, by the number written as text, or by the ask's own quote. Free; it reads fields, never
+    prose, and a list that is not a list names nothing."""
+    if not isinstance(entries, list):
+        return set()
+    index = _recompute_ask_index(anchored)
+    named: set[int] = set()
+    for entry in entries:
+        ask = _ask_field(entry, "ask")
+        for a in anchored:
+            number = _ask_field(a, "number")
+            if isinstance(number, int) and _recompute_names(ask, number, index):
+                named.add(number)
+    return named
+
+
 @check("judges_agree")
 def judges_agree(**judges: Any) -> Result:
     """Green only if every judge the loop produced says green.

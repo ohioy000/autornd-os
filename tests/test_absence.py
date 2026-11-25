@@ -19,14 +19,16 @@ import pytest
 from autornd.knowledge import absence
 from autornd.knowledge.absence import (
     MAX_TERM_CHARS, MAX_TERMS, MIN_TERMS, Proof, Searchable, TermsVerdict, clean_terms,
-    name_terms, prove, provable_asks, render_proofs,
+    edition_missing, name_terms, prove, provable_asks, render_proofs,
 )
 from autornd.routing.openrouter import BudgetExceeded
 
 # The words X41's key names, and the way a datasheet that states the figure would print them.
 WORDS = ["thermal resistance", "junction-to-ambient", "θJA", "°C/W"]
 DATASHEET = ("Absolute Maximum Ratings. Operating Temperature -55°C to +125°C. "
-             "DC Current per I/O Pin 40.0 mA. DC Current VCC and GND Pins 200.0 mA.")
+             "DC Current per I/O Pin 40.0 mA. DC Current VCC and GND Pins 200.0 mA. "
+             # long enough to be a document: a page under MIN_PROOF_PAGE_CHARS (200) proves nothing
+             "Supply Voltage 1.8V to 5.5V. Clock Frequency 0 to 20 MHz. Package options: 28-pin SOIC, 32-pin TQFP.")
 
 
 def page(text, url="https://example.org/ds.pdf", pages=0):
@@ -159,6 +161,15 @@ class TestTheProof:
         text = DATASHEET + " The thermal resis-\ntance is 45."
         assert prove({1: WORDS}, {"u": page(text)}) == []
 
+    def test_an_empty_extraction_proves_nothing(self):
+        """A PDF that extracted as 33 characters was read "in full" and proved both asks of X3 absent on
+        2026-11-24; a page with no text finds no word, so it cannot be a search of a document."""
+        from autornd.knowledge.absence import MIN_PROOF_PAGE_CHARS
+        assert MIN_PROOF_PAGE_CHARS == 200
+        assert prove({1: WORDS}, {"u": page("x" * 33)}) == []
+        assert prove({1: WORDS}, {"u": page("x" * (MIN_PROOF_PAGE_CHARS - 1))}) == []
+        assert len(prove({1: WORDS}, {"u": page("x" * MIN_PROOF_PAGE_CHARS)})) == 1
+
     def test_fewer_than_the_least_words_is_no_proof(self):
         assert MIN_TERMS == 3
         assert prove({1: WORDS[:MIN_TERMS - 1]}, {"u": page(DATASHEET)}) == []
@@ -276,6 +287,14 @@ class TestNamingTheWords:
         for left_out in ("list the steps in order", "answer in a table", "stay under the stated limit"):
             assert left_out not in message
 
+    async def test_the_call_is_made_with_thinking_off(self):
+        """The cheapest tier is a reasoning model: at its default it spent all 2000 tokens thinking and
+        returned no text on every request probed on 2026-11-23, so no proof was ever made. With thinking
+        off the same requests came back in under 80 tokens. Medium effort and a bigger budget did not help."""
+        client, calls = double({"terms": []})
+        await name_terms(client, "r", ASKS)
+        assert calls[0]["reasoning"] == {"enabled": False}
+
     async def test_no_provable_ask_is_no_call_and_no_cost(self):
         client, calls = double({"terms": []})
         assert await name_terms(client, "r", [ASKS[2], ASKS[3]]) == {}
@@ -310,6 +329,47 @@ class TestNamingTheWords:
         client, _ = double(error=BudgetExceeded("over the ceiling"))
         with pytest.raises(BudgetExceeded):
             await name_terms(client, "r", ASKS)
+
+
+class TestAProofCountsOnlyOnAPageOfTheEditionTheQuestionNames:
+    """X35 (2026-11-24): the question asked for the CODATA 2018 value, every page the proof was made on was the
+    2022 adjustment, the words of the 2018 value were truly absent from them, and the answer said the value was
+    not stated. A page that carries no year the request names is not shown to be the edition asked about."""
+
+    REQUEST = "What is the CODATA 2022 value of the Rydberg constant, and the 2018 value it replaced?"
+    TERMS = ["CODATA 2018 value", "10 973 731.568 160", "2018 adjustment"]
+    P2022 = ("CODATA 2022 recommended values. Rydberg constant 10 973 731.568 157(12) per metre. "
+             "Fine-structure constant, electron mass, proton mass and the Planck constant follow in the table. "
+             "Source: the 2022 adjustment of the fundamental physical constants, published May 2024.")
+    P2018 = P2022 + " Superseded: the 2018 adjustment gave a value near it, listed in the earlier edition."
+
+    def test_a_page_of_another_edition_proves_nothing(self):
+        assert prove({1: self.TERMS}, {"a": page(self.P2022)}, self.REQUEST) == []
+
+    def test_a_page_that_carries_the_year_is_a_proof_as_before(self):
+        text = self.P2018.replace("2018 adjustment", "2018 round")
+        assert [p.url for p in prove({1: self.TERMS}, {"a": page(text)}, self.REQUEST)] == ["a"]
+
+    def test_without_the_request_every_page_counts_as_before(self):
+        assert len(prove({1: self.TERMS}, {"a": page(self.P2022)})) == 1
+
+    def test_a_year_the_request_does_not_name_is_a_guess_not_an_identifier(self):
+        """Search words may list guessed answers ("2025 to 2043"); a page lacking a guess is just absence."""
+        terms = ["new epoch", "2025 to 2043", "fifth epoch"]
+        assert len(prove({1: terms}, {"a": page(self.P2022)}, "What is the new tidal epoch?")) == 1
+
+    def test_an_ask_whose_words_name_no_year_is_unaffected(self):
+        terms = ["thermal resistance", "junction-to-ambient", "°C/W"]
+        assert len(prove({1: terms}, {"a": page(DATASHEET)}, "In the 2020 datasheet, what is theta JA?")) == 1
+
+    def test_the_edition_is_read_off_the_page_text_not_its_address(self):
+        text = self.P2022
+        assert edition_missing(self.REQUEST, self.TERMS, text) == {"2018"}
+        assert edition_missing(self.REQUEST, self.TERMS, text + " 2018") == set()
+
+    def test_a_year_inside_a_longer_number_is_not_a_year(self):
+        assert edition_missing(self.REQUEST, self.TERMS, "see 12018 and 20180") == {"2018"}
+        assert edition_missing(self.REQUEST, self.TERMS, "see (2018) and x2018x") == set()
 
 
 class TestTheSourceNamesNoModelAndNoPrice:

@@ -757,6 +757,181 @@ class TestWhatTheFetchCanRead:
             assert fetch.readable_address(url) == url
 
 
+class TestAPageThatIsAFrameIsNotAPage:
+    """Measured 2026-11-24 over the stored runs: legislation.gov.au and NVD addresses came back as a
+    script's frame of 72 to 2,081 characters, were recorded as fetched, and a word search of them
+    was reported as proof that the document does not state a figure. The document was never read."""
+
+    FRAME = ("<html><head><title>Instrument - Federal Register</title></head><body>"
+             "<app-root></app-root><noscript>Please enable JavaScript.</noscript></body></html>")
+    API = ("https://api.prod.legislation.gov.au/v1/documents/find(titleId='F2015L01438',"
+           "asAtSpecification='{v}',type='Primary',format='Pdf',uniqueTypeNumber=0,"
+           "volumeNumber=0,rectificationVersionNumber=0)")
+
+    @pytest.mark.parametrize("reader, version", [
+        ("https://www.legislation.gov.au/F2015L01438", "latest"),
+        ("https://www.legislation.gov.au/F2015L01438/latest/text", "latest"),
+        ("https://legislation.gov.au/F2015L01438/latest", "latest"),
+        ("https://www.legislation.gov.au/F2015L01438/asmade/text", "asmade"),
+        ("https://www.legislation.gov.au/f2015l01438/ASMADE", "asmade"),
+    ])
+    def test_an_instrument_is_read_through_the_registers_document_route(self, reader, version):
+        assert fetch.readable_address(reader) == self.API.format(v=version)
+
+    @pytest.mark.parametrize("url", [
+        "https://www.legislation.gov.au/F2015L01438/2023-03-02/text",   # a dated compilation
+        "https://www.legislation.gov.au/",
+        "https://www.legislation.gov.au/search?q=F2015L01438",
+        "https://example.org/F2015L01438/latest",
+    ])
+    def test_a_form_the_route_does_not_cover_is_left_alone(self, url):
+        assert fetch.readable_address(url) == url
+
+    def test_a_cve_record_is_read_through_the_nvd_api(self):
+        api = "https://services.nvd.nist.gov/rest/json/cves/2.0?cveId=CVE-2021-44228"
+        for url in ("https://nvd.nist.gov/vuln/detail/CVE-2021-44228",
+                    "https://nvd.nist.gov/vuln/detail/cve-2021-44228?ci%3D2558",
+                    "https://nvd.nist.gov/vuln/detail/CVE-2021-44228#vulnCurrentDescriptionTitle"):
+            assert fetch.readable_address(url) == api
+        assert fetch.readable_address("https://nvd.nist.gov/vuln/search") == (
+            "https://nvd.nist.gov/vuln/search")
+
+    async def test_an_instrument_is_read_from_its_pdf(self, monkeypatch):
+        reader = "https://www.legislation.gov.au/F2015L01438/latest/text"
+        api = self.API.format(v="latest")
+        seen: list[str] = []
+        text = "The maximum field strength is 5 mW at 868 MHz. " * 8
+        monkeypatch.setattr(fetch, "_transport", _served({api: _pdf(text)}, seen))
+        source = await fetch.fetch_source(reader)
+        assert source.status == "fetched" and seen == [api]
+        assert "5 mW at 868 MHz" in source.text and source.url == reader
+
+    async def test_a_frame_the_script_fills_is_not_read(self, monkeypatch):
+        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html(self.FRAME)}))
+        source = await fetch.fetch_source(PAGE)
+        assert source.status == "failed" and not source.fetched and source.text == ""
+        assert "shell" in source.reason
+
+    async def test_a_page_the_script_has_filled_is_a_page(self, monkeypatch):
+        full = self.FRAME.replace("<app-root></app-root>",
+                                  "<app-root><p>" + "The limit is stated here. " * 200
+                                  + "</p></app-root>")
+        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html(full)}))
+        source = await fetch.fetch_source(PAGE)
+        assert source.fetched and fetch.SHELL_MAX_CHARS < len(source.text)
+
+    async def test_a_short_page_with_no_frame_is_a_page(self, monkeypatch):
+        short = "<html><body><p>Charge each cell to 3.65 V.</p></body></html>"
+        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html(short)}))
+        assert (await fetch.fetch_source(PAGE)).fetched
+
+    async def test_a_frame_is_recorded_as_unfetched_and_proves_nothing(self, monkeypatch):
+        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html(self.FRAME)}))
+        finding, = await research_gaps(
+            _client(_documents((PAGE, PASSAGE))), "a radio", ["The EU 868 MHz limit"])
+        quote, = finding.quotes
+        assert quote.status == "unfetched" and "shell" in quote.reason
+
+
+class TestADspaceFrameIsFollowedToItsFile:
+    """X3 (2026-11-25): iris.who.int answered the address of a PDF with a 755-byte DSpace frame, it was recorded as fetched with 33
+    characters, and the WHO air quality guidelines (a PDF of 7 MB behind the repository's API) were never read."""
+
+    HOST = "https://repo.example.org"
+    FRAME = ("<html><head><title>DSpace</title></head><body><ds-app></ds-app>"
+             "<script src='main.js' type='module'></script></body></html>")
+    TEXT = "SO2 24-hour interim targets 125 50 and the AQG level 40 micrograms per cubic metre. " * 4
+    ITEM = HOST + "/server/api/core/items/5b0ca7ab-830a-44b8-b99f-4ee743b4d7b2"
+
+    def _api(self, *, content="/server/api/core/bitstreams/b1/content", names=("guidelines.pdf",)):
+        j = lambda body: (200, {"content-type": "application/hal+json"}, json.dumps(body).encode())  # noqa: E731
+        streams = [{"name": n, "_links": {"content": {"href": self.HOST + content.replace("b1", f"b{i}")}}}
+                   for i, n in enumerate(names, 1)]
+        return {
+            self.HOST + "/server/api/pid/find?id=hdl:10665/345329": (302, {"location": self.ITEM}, b""),
+            self.ITEM: j({"_links": {"bundles": {"href": self.ITEM + "/bundles"}}}),
+            self.ITEM + "/bundles": j({"_embedded": {"bundles": [
+                {"name": "LICENSE", "_links": {"bitstreams": {"href": self.HOST + "/x"}}},
+                {"name": "ORIGINAL", "_links": {"bitstreams": {"href": self.HOST + "/server/api/core/bundles/o/bitstreams"}}}]}}),
+            self.HOST + "/server/api/core/bundles/o/bitstreams": j({"_embedded": {"bitstreams": streams}}),
+            self.HOST + "/server/api/core/bitstreams/b1/content": _pdf(self.TEXT),
+            self.HOST + "/server/api/core/bitstreams/b2/content": _pdf("The second file is another document. " * 8),
+        }
+
+    @pytest.mark.parametrize("address", [
+        "/bitstream/handle/10665/345329/guidelines.pdf",
+        "/bitstream/handle/10665/345329/guidelines.pdf?sequence=1&isAllowed=y",
+        "/handle/10665/345329",
+    ])
+    async def test_a_frame_at_a_documents_address_is_read_from_the_repository(self, monkeypatch, address):
+        pages = {self.HOST + address.split("?")[0]: _html(self.FRAME), **self._api()}
+        if "?" in address:
+            pages[self.HOST + address] = _html(self.FRAME)
+        monkeypatch.setattr(fetch, "_transport", _served(pages))
+        source = await fetch.fetch_source(self.HOST + address)
+        assert source.fetched and "AQG level 40" in source.text
+        assert source.url == self.HOST + address and source.final_url.endswith("/bitstreams/b1/content")
+
+    async def test_the_file_named_in_the_address_is_the_one_read(self, monkeypatch):
+        pages = {self.HOST + "/bitstream/handle/10665/345329/other.pdf": _html(self.FRAME),
+                 **self._api(names=("guidelines.pdf", "other.pdf"))}
+        monkeypatch.setattr(fetch, "_transport", _served(pages))
+        source = await fetch.fetch_source(self.HOST + "/bitstream/handle/10665/345329/other.pdf")
+        assert source.fetched and "second file" in source.text
+
+    async def test_an_item_address_reads_the_item_without_a_handle_lookup(self, monkeypatch):
+        seen: list[str] = []
+        address = self.HOST + "/items/5b0ca7ab-830a-44b8-b99f-4ee743b4d7b2"
+        monkeypatch.setattr(fetch, "_transport", _served({address: _html(self.FRAME), **self._api()}, seen))
+        assert (await fetch.fetch_source(address)).fetched
+        assert not any("pid/find" in u for u in seen)
+
+    async def test_a_hop_that_fails_leaves_the_frame_unread(self, monkeypatch):
+        api = self._api()
+        del api[self.ITEM + "/bundles"]
+        monkeypatch.setattr(fetch, "_transport",
+                            _served({self.HOST + "/handle/10665/345329": _html(self.FRAME), **api}))
+        source = await fetch.fetch_source(self.HOST + "/handle/10665/345329")
+        assert source.status == "failed" and "shell" in source.reason
+
+    async def test_a_file_on_another_host_is_not_followed(self, monkeypatch):
+        api = self._api(content="/server/api/core/bitstreams/b1/content")
+        api[self.HOST + "/server/api/core/bundles/o/bitstreams"] = (
+            200, {"content-type": "application/hal+json"},
+            json.dumps({"_embedded": {"bitstreams": [{"name": "g.pdf", "_links": {"content": {
+                "href": "https://elsewhere.example.net/g.pdf"}}}]}}).encode())
+        seen: list[str] = []
+        monkeypatch.setattr(fetch, "_transport",
+                            _served({self.HOST + "/handle/10665/345329": _html(self.FRAME), **api}, seen))
+        assert (await fetch.fetch_source(self.HOST + "/handle/10665/345329")).status == "failed"
+        assert not any("elsewhere" in u for u in seen)
+
+    async def test_a_frame_that_is_not_dspace_is_not_sent_to_a_repository_api(self, monkeypatch):
+        seen: list[str] = []
+        angular = self.FRAME.replace("<ds-app></ds-app>", "<app-root></app-root>")
+        monkeypatch.setattr(fetch, "_transport",
+                            _served({self.HOST + "/handle/10665/345329": _html(angular)}, seen))
+        source = await fetch.fetch_source(self.HOST + "/handle/10665/345329")
+        assert source.status == "failed" and seen == [self.HOST + "/handle/10665/345329"]
+
+    async def test_a_tiny_page_that_loads_a_script_is_a_frame_whatever_its_root_is_called(self, monkeypatch):
+        tiny = "<html><body><my-viewer></my-viewer><script src='a.js'></script></body></html>"
+        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html(tiny)}))
+        assert (await fetch.fetch_source(PAGE)).status == "failed"
+
+    async def test_a_short_page_that_is_mostly_its_own_words_is_a_page_though_it_loads_a_script(self, monkeypatch):
+        short = "<html><body><p>Charge each cell to 3.65 V, no higher.</p><script>1</script></body></html>"
+        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html(short)}))
+        assert (await fetch.fetch_source(PAGE)).fetched
+
+    async def test_a_tiny_page_with_no_script_and_a_long_page_with_one_are_pages(self, monkeypatch):
+        plain = "<html><body><p>Charge to 3.65 V.</p></body></html>"
+        long = "<html><body><p>" + "The limit is stated here. " * 20 + "</p><script src='a.js'></script></body></html>"
+        monkeypatch.setattr(fetch, "_transport", _served({PAGE: _html(plain), PAGE + "2": _html(long)}))
+        assert (await fetch.fetch_source(PAGE)).fetched
+        assert (await fetch.fetch_source(PAGE + "2")).fetched
+
+
 class TestTheSourcesAreReturned:
     async def test_a_lookup_record_names_each_page_and_what_was_found(self, monkeypatch):
         monkeypatch.setattr(fetch, "_transport",
@@ -1013,3 +1188,25 @@ class TestBooksDocumentsAndData:
                                   _docx())
         assert source.status == "failed"
         assert source.reason == "the document has no text"
+
+
+class TestAHostIsReachedOnIpv4First:
+    """The fetch connects to the first address. A dual-stack host that lists
+    IPv6 first hung every fetch on a machine with no IPv6 route (X38, 2026-11-25)."""
+
+    def _resolve(self, monkeypatch, infos):
+        class _Loop:
+            async def getaddrinfo(self, host, port, type=None):
+                return [(0, 0, 0, "", (a, 0)) for a in infos]
+        monkeypatch.setattr(fetch.asyncio, "get_running_loop", lambda: _Loop())
+
+    def test_ipv4_comes_first_when_the_host_lists_ipv6_first(self, monkeypatch):
+        monkeypatch.undo()
+        self._resolve(monkeypatch, ["2001:19e8:d4::29", "204.152.44.29"])
+        out = asyncio.run(fetch._addresses("example.test"))
+        assert out == ["204.152.44.29", "2001:19e8:d4::29"]
+
+    def test_an_ipv6_only_host_keeps_its_address(self, monkeypatch):
+        monkeypatch.undo()
+        self._resolve(monkeypatch, ["2001:db8::1"])
+        assert asyncio.run(fetch._addresses("example.test")) == ["2001:db8::1"]

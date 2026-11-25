@@ -142,6 +142,44 @@ _ECFR_PART = re.compile(
     r"/?(?:[?#].*)?$",
     re.IGNORECASE)
 
+# Sites whose address serves a page built by a script, so the bytes hold a frame and no document
+# (measured 2026-11-24 over the stored runs: 13 of 37 proofs of absence on pages under 3,000
+# characters were legislation.gov.au pages of 1,770 to 2,081 characters, and 5 were NVD CVE pages of
+# 72). Each has an address of its own that returns the document itself to an automated client, read
+# live on 2026-11-25: the Federal Register's API sends the PDF of an instrument, NVD's API sends the
+# record as JSON. Only the forms that name no date are routed: a dated compilation needs the version
+# list first, and is left alone (so it fails as a shell, below, and is not read).
+_LEGISLATION_AU = re.compile(
+    r"^https?://(?:www\.)?legislation\.gov\.au/(?P<id>[A-Z]\d{4}[A-Z]\d{5})"
+    r"(?:/(?P<version>latest|asmade))?(?:/text)?/?(?:[?#].*)?$", re.IGNORECASE)
+_NVD_RECORD = re.compile(
+    r"^https?://nvd\.nist\.gov/vuln/detail/(?P<cve>CVE-\d{4}-\d{4,})(?:[/?#].*)?$",
+    re.IGNORECASE)
+
+# A DSpace 7 repository (iris.who.int and others) answers every address of a document with a frame and keeps
+# the file behind its own API: handle -> item -> ORIGINAL bundle -> bitstream -> content. Read live on 2026-11-25
+# for the WHO air quality guidelines (item 5b0ca7ab..., one PDF of 7,321,751 bytes), each hop returns JSON to a
+# plain client. Used only after a frame with the <ds-app> root is read, never on an address by its look alone.
+_DSPACE_ADDRESS = re.compile(
+    r"^https?://[^/]+/(?:(?:bitstream/)?handle/(?P<handle>\d+/\d+)(?:/(?P<file>[^/?#]+))?"
+    r"|items/(?P<item>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}))(?:[?#].*)?$",
+    re.IGNORECASE)
+DSPACE_JSON_MAX_BYTES = 2_000_000
+
+# What a page built by a script carries in its own bytes: the empty element the script fills.
+_SHELL_MARKS = ("<app-root", "<ds-app", "ng-version=", 'id="root"', "id='root'")
+# A page with this little text that loads a script is a frame whatever its root element is called. Measured
+# 2026-11-25 (X3): iris.who.int answered a PDF address with a 755-byte DSpace frame whose root is <ds-app>, which
+# no mark above named; it was recorded as fetched with 33 characters of text, the same size as the page the
+# proof code already refuses (MIN_PROOF_PAGE_CHARS), and the PDF it stood for was never read.
+FRAME_MAX_CHARS = 200
+# ... and the text is under a tenth of the page's bytes: the frames read were 3 to 5 percent text (DSpace 33 of 755,
+# NVD 72 of 2,268), a short real page that carries a script is mostly its own words (the test page is about a third).
+FRAME_TEXT_SHARE_INVERSE = 10
+# A page that has one of those marks and less text than this has no document in it. The shells read
+# measured 72 to 2,081 characters; a page the script had already filled (server-rendered) is longer.
+SHELL_MAX_CHARS = 3000
+
 # A page that asks the reader to prove they are a person. It arrives as HTTP
 # 200 with a little text, so without this it was recorded as fetched and
 # every quote read as "not found in the page" when the page was never read.
@@ -217,7 +255,29 @@ def readable_address(url: str) -> str:
         subpart = f"&subpart={match['subpart']}" if match["subpart"] else ""
         return ("https://www.ecfr.gov/api/renderer/v1/content/enhanced/current/"
                 f"title-{match['title']}?part={match['part']}{subpart}")
+    match = _LEGISLATION_AU.match(url.strip())
+    if match:
+        return ("https://api.prod.legislation.gov.au/v1/documents/find("
+                f"titleId='{match['id'].upper()}',"
+                f"asAtSpecification='{(match['version'] or 'latest').lower()}',"
+                "type='Primary',format='Pdf',uniqueTypeNumber=0,volumeNumber=0,"
+                "rectificationVersionNumber=0)")
+    match = _NVD_RECORD.match(url.strip())
+    if match:
+        return ("https://services.nvd.nist.gov/rest/json/cves/2.0?cveId="
+                + match["cve"].upper())
     return url
+
+
+def shell_page(html: str, text: str) -> bool:
+    """Is this a frame a script fills, not the document? Typed, no model: the page's own bytes carry
+    the empty root element, and the text the reader sees is short."""
+    if len(text) >= SHELL_MAX_CHARS:
+        return False
+    folded = html.casefold()
+    if len(text) < FRAME_MAX_CHARS and len(text) * FRAME_TEXT_SHARE_INVERSE < len(html) and "<script" in folded:
+        return True
+    return any(mark in folded for mark in _SHELL_MARKS)
 
 
 def challenge_page(text: str) -> bool:
@@ -520,7 +580,18 @@ async def _fetch(url: str, progress: dict[str, int] | None = None) -> Source:
                     except LookupError:
                         text = raw.decode("utf-8", errors="replace")
                     if kind == "html":
-                        text = html_text(text)
+                        page = text
+                        text = html_text(page)
+                        if shell_page(page, text):
+                            if "<ds-app" in page.casefold():
+                                routed = await _dspace_document(url, current)
+                                if routed is not None:
+                                    return routed
+                            return Source(url, "failed",
+                                          "the page is built by a script and holds no "
+                                          "document text (a shell), so it was not read",
+                                          final_url=current,
+                                          content_type=content_type)
                     elif kind == "json":
                         text = json_text(text)
                     if challenge_page(text):
@@ -540,11 +611,80 @@ async def _fetch(url: str, progress: dict[str, int] | None = None) -> Source:
                   final_url=current)
 
 
+async def _get_json(url: str) -> Any:
+    """One JSON document, through the same address check and connection as a page; raises on any failure."""
+    current = url
+    async with httpx.AsyncClient(transport=_transport, follow_redirects=False,
+                                 timeout=FETCH_TIMEOUT_SECONDS, trust_env=False,
+                                 headers={"User-Agent": USER_AGENT}) as client:
+        for _ in range(MAX_REDIRECTS + 1):
+            status, reason, address = await _check_address(current)
+            if status:
+                raise UnreadableDocument(reason)
+            name = httpx.URL(current)
+            async with client.stream(
+                    "GET", name.copy_with(host=address, username=None, password=None),
+                    headers={"Host": name.netloc.decode("ascii")},
+                    extensions={"sni_hostname": name.host}) as response:
+                if response.is_redirect:
+                    current = urljoin(current, response.headers.get("location", ""))
+                    continue
+                if response.status_code != 200:
+                    raise UnreadableDocument(f"HTTP {response.status_code}")
+                body = bytearray()
+                async for chunk in response.aiter_bytes():
+                    body.extend(chunk)
+                    if len(body) > DSPACE_JSON_MAX_BYTES:
+                        raise UnreadableDocument("a JSON answer larger than the limit")
+                return json.loads(bytes(body))
+    raise UnreadableDocument("too many redirects")
+
+
+async def _dspace_document(url: str, base: str) -> Source | None:
+    """The file a DSpace frame stands for, read as a document; None when the address is not one or any hop fails.
+
+    Every link taken from an answer must stay on the host asked; the address check runs on each hop."""
+    match = _DSPACE_ADDRESS.match(url.strip())
+    if not match:
+        return None
+    origin = "{0.scheme}://{0.netloc}".format(urlsplit(base))
+    try:
+        if match["item"]:
+            item_url = f"{origin}/server/api/core/items/{match['item'].lower()}"
+        else:
+            item_url = f"{origin}/server/api/pid/find?id=hdl:{match['handle']}"
+        item = await _get_json(item_url)
+        bundles = await _get_json(item["_links"]["bundles"]["href"])
+        original = [b for b in bundles["_embedded"]["bundles"] if b.get("name") == "ORIGINAL"]
+        streams = (await _get_json(original[0]["_links"]["bitstreams"]["href"]))["_embedded"]["bitstreams"]
+        named = [b for b in streams if match["file"] and b.get("name") == match["file"]]
+        content = (named or streams)[0]["_links"]["content"]["href"]
+    except Exception as exc:
+        logger.info("A DSpace frame at %s could not be followed to its file (%s)", url, _error_name(exc))
+        return None
+    if urlsplit(content).netloc != urlsplit(base).netloc:
+        return None
+    source = await _fetch(content)
+    if not source.fetched:
+        return None
+    source.url = url
+    return source
+
+
 async def _addresses(host: str) -> list[str]:
-    """Every address `host` resolves to."""
+    """Every address `host` resolves to, IPv4 first.
+
+    The fetch connects to the first address, so the order is the choice. Found
+    2026-11-25 on the X38 miss: mutcd-dr.fhwa.dot.gov resolves to an IPv6
+    address first, this machine has no IPv6 route, and every fetch of its
+    pages hung to the 60 s limit ("no answer within 60 s") while curl, which
+    falls back to IPv4, read the same pages in about 1 s. A longer limit would
+    not have helped. A host with only IPv6 still gets its IPv6 address.
+    """
     loop = asyncio.get_running_loop()
     infos = await loop.getaddrinfo(host, None, type=socket.SOCK_STREAM)
-    return [info[4][0] for info in infos]
+    found = [info[4][0] for info in infos]
+    return sorted(found, key=lambda a: ":" in a)
 
 
 async def _check_address(url: str) -> tuple[str, str, str]:
