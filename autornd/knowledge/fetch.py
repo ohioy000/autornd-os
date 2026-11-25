@@ -142,6 +142,26 @@ _ECFR_PART = re.compile(
     r"/?(?:[?#].*)?$",
     re.IGNORECASE)
 
+# Sites whose address serves a page built by a script, so the bytes hold a frame and no document
+# (measured 2026-11-24 over the stored runs: 13 of 37 proofs of absence on pages under 3,000
+# characters were legislation.gov.au pages of 1,770 to 2,081 characters, and 5 were NVD CVE pages of
+# 72). Each has an address of its own that returns the document itself to an automated client, read
+# live on 2026-11-25: the Federal Register's API sends the PDF of an instrument, NVD's API sends the
+# record as JSON. Only the forms that name no date are routed: a dated compilation needs the version
+# list first, and is left alone (so it fails as a shell, below, and is not read).
+_LEGISLATION_AU = re.compile(
+    r"^https?://(?:www\.)?legislation\.gov\.au/(?P<id>[A-Z]\d{4}[A-Z]\d{5})"
+    r"(?:/(?P<version>latest|asmade))?(?:/text)?/?(?:[?#].*)?$", re.IGNORECASE)
+_NVD_RECORD = re.compile(
+    r"^https?://nvd\.nist\.gov/vuln/detail/(?P<cve>CVE-\d{4}-\d{4,})(?:[/?#].*)?$",
+    re.IGNORECASE)
+
+# What a page built by a script carries in its own bytes: the empty element the script fills.
+_SHELL_MARKS = ("<app-root", "ng-version=", 'id="root"', "id='root'")
+# A page that has one of those marks and less text than this has no document in it. The shells read
+# measured 72 to 2,081 characters; a page the script had already filled (server-rendered) is longer.
+SHELL_MAX_CHARS = 3000
+
 # A page that asks the reader to prove they are a person. It arrives as HTTP
 # 200 with a little text, so without this it was recorded as fetched and
 # every quote read as "not found in the page" when the page was never read.
@@ -217,7 +237,27 @@ def readable_address(url: str) -> str:
         subpart = f"&subpart={match['subpart']}" if match["subpart"] else ""
         return ("https://www.ecfr.gov/api/renderer/v1/content/enhanced/current/"
                 f"title-{match['title']}?part={match['part']}{subpart}")
+    match = _LEGISLATION_AU.match(url.strip())
+    if match:
+        return ("https://api.prod.legislation.gov.au/v1/documents/find("
+                f"titleId='{match['id'].upper()}',"
+                f"asAtSpecification='{(match['version'] or 'latest').lower()}',"
+                "type='Primary',format='Pdf',uniqueTypeNumber=0,volumeNumber=0,"
+                "rectificationVersionNumber=0)")
+    match = _NVD_RECORD.match(url.strip())
+    if match:
+        return ("https://services.nvd.nist.gov/rest/json/cves/2.0?cveId="
+                + match["cve"].upper())
     return url
+
+
+def shell_page(html: str, text: str) -> bool:
+    """Is this a frame a script fills, not the document? Typed, no model: the page's own bytes carry
+    the empty root element, and the text the reader sees is short."""
+    if len(text) >= SHELL_MAX_CHARS:
+        return False
+    folded = html.casefold()
+    return any(mark in folded for mark in _SHELL_MARKS)
 
 
 def challenge_page(text: str) -> bool:
@@ -520,7 +560,14 @@ async def _fetch(url: str, progress: dict[str, int] | None = None) -> Source:
                     except LookupError:
                         text = raw.decode("utf-8", errors="replace")
                     if kind == "html":
-                        text = html_text(text)
+                        page = text
+                        text = html_text(page)
+                        if shell_page(page, text):
+                            return Source(url, "failed",
+                                          "the page is built by a script and holds no "
+                                          "document text (a shell), so it was not read",
+                                          final_url=current,
+                                          content_type=content_type)
                     elif kind == "json":
                         text = json_text(text)
                     if challenge_page(text):
